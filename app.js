@@ -182,17 +182,24 @@ class SpeedReader {
             this.settings.pauseOnPunctuation = e.target.checked;
         });
         
-        // Sidebar
+        // Sidebar - both library button and text button open it
         this.libraryBtn.addEventListener('click', () => {
-            this.textSidebar.classList.toggle('open');
-            if (this.words.length > 0) {
-                this.displayFullText();
-            }
+            this.toggleSidebar();
         });
         
-        this.closeSidebarBtn.addEventListener('click', () => {
-            this.textSidebar.classList.remove('open');
-        });
+        const sidebarToggleBtn = document.getElementById('sidebarToggleBtn');
+        if (sidebarToggleBtn) {
+            sidebarToggleBtn.addEventListener('click', () => {
+                this.toggleSidebar();
+            });
+        }
+        
+        // Close sidebar button
+        if (this.closeSidebarBtn) {
+            this.closeSidebarBtn.addEventListener('click', () => {
+                this.textSidebar.classList.remove('open');
+            });
+        }
         
         // Tabs
         document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -205,6 +212,29 @@ class SpeedReader {
         // Library
         this.searchInput.addEventListener('input', () => this.searchBooks());
         this.categoryFilter.addEventListener('change', () => this.filterBooks());
+        
+        // Search Gutenberg button
+        const searchGutenbergBtn = document.getElementById('searchGutenbergBtn');
+        if (searchGutenbergBtn) {
+            searchGutenbergBtn.addEventListener('click', () => {
+                const query = this.searchInput.value.trim();
+                if (query) {
+                    this.searchGutenberg(query);
+                } else {
+                    this.loadLibrary(); // Load default books if no query
+                }
+            });
+            
+            // Also search when Enter is pressed in search input
+            this.searchInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    const query = this.searchInput.value.trim();
+                    if (query) {
+                        this.searchGutenberg(query);
+                    }
+                }
+            });
+        }
         
         // Keyboard shortcuts
         document.addEventListener('keydown', (e) => {
@@ -225,7 +255,7 @@ class SpeedReader {
                     this.reset();
                     break;
                 case 's':
-                    this.textSidebar.classList.toggle('open');
+                    this.toggleSidebar();
                     break;
             }
         });
@@ -241,9 +271,12 @@ class SpeedReader {
     }
 
     loadText(text) {
-        // Clean and process text
-        text = text.replace(/\s+/g, ' ').trim();
-        this.words = text.split(' ').filter(word => word.length > 0);
+        // Store original text for sidebar display
+        this.originalText = text;
+        
+        // Clean and process text for word display
+        const cleanedText = text.replace(/\s+/g, ' ').trim();
+        this.words = cleanedText.split(' ').filter(word => word.length > 0);
         this.currentIndex = 0;
         this.updateDisplay();
         this.updateProgress();
@@ -383,6 +416,20 @@ class SpeedReader {
         }
         this.updateProgress();
     }
+    
+    toggleSidebar() {
+        if (!this.textSidebar) {
+            console.error('Sidebar element not found');
+            return;
+        }
+        
+        this.textSidebar.classList.toggle('open');
+        
+        // If opening and we have text, display it
+        if (this.textSidebar.classList.contains('open') && this.words.length > 0) {
+            this.displayFullText();
+        }
+    }
 
     displayWord(word) {
         if (this.settings.highlightCenter && word.length > 1) {
@@ -420,22 +467,78 @@ class SpeedReader {
     }
 
     displayFullText() {
+        if (!this.fullText) {
+            console.error('Full text element not found');
+            return;
+        }
+        
         this.fullText.innerHTML = '';
-        this.words.forEach((word, index) => {
-            const span = document.createElement('span');
-            span.className = 'word';
-            span.textContent = word + ' ';
-            span.dataset.index = index;
-            if (index === this.currentIndex) {
-                span.classList.add('current');
+        
+        if (!this.originalText || this.originalText.length === 0) {
+            // Fallback if no original text stored - reconstruct from words
+            if (this.words && this.words.length > 0) {
+                this.words.forEach((word, index) => {
+                    const span = document.createElement('span');
+                    span.className = 'word';
+                    span.textContent = word + ' ';
+                    span.dataset.index = index;
+                    if (index === this.currentIndex) {
+                        span.classList.add('current');
+                    }
+                    span.addEventListener('click', () => {
+                        this.currentIndex = index;
+                        this.displayWord(word);
+                        this.updateProgress();
+                        this.highlightCurrentWord();
+                    });
+                    this.fullText.appendChild(span);
+                });
             }
-            span.addEventListener('click', () => {
-                this.currentIndex = index;
-                this.displayWord(word);
-                this.updateProgress();
-                this.highlightCurrentWord();
+            return;
+        }
+        
+        // Split text into paragraphs
+        const paragraphs = this.originalText.split(/\n\s*\n/);
+        let wordIndex = 0;
+        
+        paragraphs.forEach((paragraph, pIndex) => {
+            if (!paragraph.trim()) return;
+            
+            const paragraphDiv = document.createElement('div');
+            paragraphDiv.className = 'text-paragraph';
+            
+            // Split paragraph into words while preserving structure
+            const paragraphWords = paragraph.replace(/\s+/g, ' ').trim().split(' ');
+            
+            paragraphWords.forEach(word => {
+                if (!word) return;
+                
+                // Find the corresponding index in our main words array
+                let currentWordIndex = wordIndex;
+                if (currentWordIndex < this.words.length && this.words[currentWordIndex] === word) {
+                    const span = document.createElement('span');
+                    span.className = 'word';
+                    span.textContent = word + ' ';
+                    span.dataset.index = currentWordIndex;
+                    
+                    if (currentWordIndex === this.currentIndex) {
+                        span.classList.add('current');
+                    }
+                    
+                    const index = currentWordIndex;
+                    span.addEventListener('click', () => {
+                        this.currentIndex = index;
+                        this.displayWord(this.words[index]);
+                        this.updateProgress();
+                        this.highlightCurrentWord();
+                    });
+                    
+                    paragraphDiv.appendChild(span);
+                    wordIndex++;
+                }
             });
-            this.fullText.appendChild(span);
+            
+            this.fullText.appendChild(paragraphDiv);
         });
     }
 
@@ -467,24 +570,61 @@ class SpeedReader {
         this.bookList.innerHTML = '<div class="loading">Loading books from Project Gutenberg...</div>';
         
         try {
-            // Sample books for now - in production, this would fetch from Gutenberg API
-            const sampleBooks = [
-                { id: 1, title: 'Pride and Prejudice', author: 'Jane Austen', category: 'fiction' },
-                { id: 2, title: 'Moby Dick', author: 'Herman Melville', category: 'fiction' },
-                { id: 3, title: 'The Adventures of Sherlock Holmes', author: 'Arthur Conan Doyle', category: 'fiction' },
-                { id: 4, title: 'The Republic', author: 'Plato', category: 'philosophy' },
-                { id: 5, title: 'The Origin of Species', author: 'Charles Darwin', category: 'science' },
-                { id: 6, title: 'The Federalist Papers', author: 'Hamilton, Madison, Jay', category: 'history' },
-                { id: 7, title: 'Alice\'s Adventures in Wonderland', author: 'Lewis Carroll', category: 'fiction' },
-                { id: 8, title: 'The Prince', author: 'Niccolò Machiavelli', category: 'philosophy' }
-            ];
+            // Use Gutendex API (a free API for Project Gutenberg)
+            const response = await fetch('https://gutendex.com/books/?mime_type=text%2Fplain&languages=en&copyright=false&page=1');
+            const data = await response.json();
             
-            this.books = sampleBooks;
+            // Transform the data to our format
+            this.books = data.results.map(book => ({
+                id: book.id,
+                title: book.title,
+                author: book.authors.length > 0 ? book.authors[0].name : 'Unknown',
+                subjects: book.subjects,
+                formats: book.formats,
+                category: this.categorizeBook(book.subjects || [])
+            }));
+            
+            this.allBooks = this.books; // Store all books for filtering
             this.displayBooks(this.books);
         } catch (error) {
             console.error('Error loading library:', error);
-            this.bookList.innerHTML = '<div class="loading">Error loading library</div>';
+            // Fallback to curated popular books if API fails
+            this.loadFallbackBooks();
         }
+    }
+    
+    categorizeBook(subjects) {
+        const subjectsLower = subjects.join(' ').toLowerCase();
+        if (subjectsLower.includes('fiction') || subjectsLower.includes('novel') || subjectsLower.includes('stories')) {
+            return 'fiction';
+        } else if (subjectsLower.includes('science') || subjectsLower.includes('biology') || subjectsLower.includes('physics')) {
+            return 'science';
+        } else if (subjectsLower.includes('history') || subjectsLower.includes('historical')) {
+            return 'history';
+        } else if (subjectsLower.includes('philosophy') || subjectsLower.includes('ethics')) {
+            return 'philosophy';
+        }
+        return 'other';
+    }
+    
+    loadFallbackBooks() {
+        // Curated list with correct IDs that actually work
+        const fallbackBooks = [
+            { id: 1342, title: 'Pride and Prejudice', author: 'Jane Austen', category: 'fiction' },
+            { id: 2701, title: 'Moby Dick', author: 'Herman Melville', category: 'fiction' },
+            { id: 1661, title: 'The Adventures of Sherlock Holmes', author: 'Arthur Conan Doyle', category: 'fiction' },
+            { id: 11, title: 'Alice\'s Adventures in Wonderland', author: 'Lewis Carroll', category: 'fiction' },
+            { id: 84, title: 'Frankenstein', author: 'Mary Shelley', category: 'fiction' },
+            { id: 844, title: 'The Importance of Being Earnest', author: 'Oscar Wilde', category: 'fiction' },
+            { id: 98, title: 'A Tale of Two Cities', author: 'Charles Dickens', category: 'fiction' },
+            { id: 1232, title: 'The Prince', author: 'Niccolò Machiavelli', category: 'philosophy' },
+            { id: 174, title: 'The Picture of Dorian Gray', author: 'Oscar Wilde', category: 'fiction' },
+            { id: 345, title: 'Dracula', author: 'Bram Stoker', category: 'fiction' }
+        ];
+        
+        this.books = fallbackBooks;
+        this.allBooks = fallbackBooks;
+        this.displayBooks(this.books);
     }
 
     displayBooks(books) {
@@ -502,40 +642,132 @@ class SpeedReader {
     }
 
     async loadBookFromGutenberg(bookId, title) {
+        this.bookList.innerHTML = '<div class="loading">Loading book text...</div>';
+        
         try {
-            // For demonstration - in production, fetch actual text from Gutenberg
-            const response = await fetch(`https://www.gutenberg.org/files/${bookId}/${bookId}-0.txt`);
-            if (response.ok) {
-                const text = await response.text();
-                this.loadText(text);
+            // Try multiple URL patterns for Project Gutenberg
+            const urlPatterns = [
+                `https://www.gutenberg.org/files/${bookId}/${bookId}-0.txt`,
+                `https://www.gutenberg.org/cache/epub/${bookId}/pg${bookId}.txt`,
+                `https://www.gutenberg.org/ebooks/${bookId}.txt.utf-8`
+            ];
+            
+            let text = null;
+            let successUrl = null;
+            
+            // Try each URL pattern
+            for (const url of urlPatterns) {
+                try {
+                    const response = await fetch(url);
+                    if (response.ok) {
+                        text = await response.text();
+                        successUrl = url;
+                        break;
+                    }
+                } catch (err) {
+                    console.log(`Failed to fetch from ${url}`, err);
+                }
+            }
+            
+            // If direct fetch fails, try using a CORS proxy
+            if (!text) {
+                const corsProxy = 'https://corsproxy.io/?';
+                const gutenbergUrl = `https://www.gutenberg.org/files/${bookId}/${bookId}-0.txt`;
+                const response = await fetch(corsProxy + encodeURIComponent(gutenbergUrl));
+                if (response.ok) {
+                    text = await response.text();
+                    successUrl = 'CORS proxy';
+                }
+            }
+            
+            if (text) {
+                // Clean up the text - remove Project Gutenberg headers/footers
+                const startMarkers = ['*** START OF THE PROJECT GUTENBERG', '*** START OF THIS PROJECT GUTENBERG', '*END*THE SMALL PRINT!'];
+                const endMarkers = ['*** END OF THE PROJECT GUTENBERG', '*** END OF THIS PROJECT GUTENBERG', 'End of the Project Gutenberg'];
+                
+                let cleanText = text;
+                
+                // Find and remove header
+                for (const marker of startMarkers) {
+                    const startIndex = cleanText.indexOf(marker);
+                    if (startIndex !== -1) {
+                        const endOfLine = cleanText.indexOf('\n', startIndex);
+                        cleanText = cleanText.substring(endOfLine + 1);
+                        break;
+                    }
+                }
+                
+                // Find and remove footer
+                for (const marker of endMarkers) {
+                    const endIndex = cleanText.indexOf(marker);
+                    if (endIndex !== -1) {
+                        cleanText = cleanText.substring(0, endIndex);
+                        break;
+                    }
+                }
+                
+                this.loadText(cleanText);
                 this.saveToHistory('gutenberg', title);
-                alert(`Loaded: ${title}`);
+                this.switchTab('paste'); // Switch to reading view
+                this.bookList.innerHTML = `<div class="loading">Loaded: ${title}</div>`;
+                setTimeout(() => this.displayBooks(this.books), 2000);
             } else {
-                // Fallback to sample text
-                const sampleText = `This is a sample text for ${title}. In a production environment, this would load the actual book content from Project Gutenberg. The book would contain the full text, allowing you to practice speed reading with classic literature.`;
-                this.loadText(sampleText);
+                throw new Error('Could not fetch book text');
             }
         } catch (error) {
             console.error('Error loading book:', error);
-            alert('Error loading book. Please try again.');
+            this.bookList.innerHTML = '<div class="loading">Error loading book. Some books may not be available due to format or server issues. Please try another book.</div>';
+            setTimeout(() => this.displayBooks(this.books), 3000);
         }
     }
 
     searchBooks() {
         const searchTerm = this.searchInput.value.toLowerCase();
-        const filtered = this.books.filter(book => 
-            book.title.toLowerCase().includes(searchTerm) ||
-            book.author.toLowerCase().includes(searchTerm)
-        );
+        const category = this.categoryFilter.value;
+        
+        let filtered = this.allBooks || this.books;
+        
+        // Apply search filter
+        if (searchTerm) {
+            filtered = filtered.filter(book => 
+                book.title.toLowerCase().includes(searchTerm) ||
+                book.author.toLowerCase().includes(searchTerm)
+            );
+        }
+        
+        // Apply category filter
+        if (category) {
+            filtered = filtered.filter(book => book.category === category);
+        }
+        
         this.displayBooks(filtered);
     }
 
     filterBooks() {
-        const category = this.categoryFilter.value;
-        const filtered = category ? 
-            this.books.filter(book => book.category === category) :
-            this.books;
-        this.displayBooks(filtered);
+        this.searchBooks(); // Use unified search/filter
+    }
+    
+    async searchGutenberg(query) {
+        try {
+            this.bookList.innerHTML = '<div class="loading">Searching Project Gutenberg...</div>';
+            const response = await fetch(`https://gutendex.com/books/?search=${encodeURIComponent(query)}&mime_type=text%2Fplain&languages=en`);
+            const data = await response.json();
+            
+            this.books = data.results.map(book => ({
+                id: book.id,
+                title: book.title,
+                author: book.authors.length > 0 ? book.authors[0].name : 'Unknown',
+                subjects: book.subjects,
+                formats: book.formats,
+                category: this.categorizeBook(book.subjects || [])
+            }));
+            
+            this.allBooks = this.books;
+            this.displayBooks(this.books);
+        } catch (error) {
+            console.error('Search error:', error);
+            this.bookList.innerHTML = '<div class="loading">Search failed. Please try again.</div>';
+        }
     }
 
     applySettings() {

@@ -59,6 +59,7 @@
                 <button id="playPauseBtn" class="btn btn-primary">▶️ Start</button>
                 <button id="nextBtn" class="btn">⏭️</button>
                 <button id="resetBtn" class="btn">🔄 Reset</button>
+                <button id="sidebarToggleBtn" class="btn">📖 Text</button>
             </div>
 
             <!-- Progress Bar -->
@@ -98,14 +99,19 @@
 
             <div id="libraryTab" class="tab-content">
                 <div class="library-controls">
-                    <input type="text" id="searchInput" placeholder="Search books...">
+                    <input type="text" id="searchInput" placeholder="Search books or authors...">
+                    <button id="searchGutenbergBtn" class="btn">Search Catalog</button>
                     <select id="categoryFilter">
                         <option value="">All Categories</option>
                         <option value="fiction">Fiction</option>
                         <option value="science">Science</option>
                         <option value="history">History</option>
                         <option value="philosophy">Philosophy</option>
+                        <option value="other">Other</option>
                     </select>
+                </div>
+                <div class="library-info">
+                    <small>Browse popular books below or search the full Project Gutenberg catalog above</small>
                 </div>
                 <div id="bookList" class="book-list">
                     <div class="loading">Loading library...</div>
