@@ -56,13 +56,13 @@
             <!-- Tab 1: Help Content -->
             <div id="helpPanel" class="tab-panel active" role="tabpanel" aria-labelledby="help-tab">
                 <div class="max-w-4xl mx-auto p-6">
-                    <h2>Welcome to Speed Reader!</h2>
-                    <p>This app helps you practice and improve your reading speed using the <strong>RSVP (Rapid Serial Visual Presentation)</strong> technique.</p>
+                    <h2 class="text-3xl font-bold text-primary mb-4">Welcome to Speed Reader!</h2>
+                    <p class="mb-4 leading-relaxed">This app helps you practice and improve your reading speed using the <strong>RSVP (Rapid Serial Visual Presentation)</strong> technique.</p>
                     
-                    <div class="rsvp-explanation">
-                        <h3>🧠 What is RSVP?</h3>
-                        <p>RSVP displays one word at a time in the center of your screen at a controlled speed. This technique:</p>
-                        <ul>
+                    <div class="rsvp-explanation bg-[var(--sidebar-bg)] rounded-lg p-6 my-6 border-l-4 border-primary">
+                        <h3 class="text-xl font-semibold mb-4 mt-0">🧠 What is RSVP?</h3>
+                        <p class="mb-4">RSVP displays one word at a time in the center of your screen at a controlled speed. This technique:</p>
+                        <ul class="ml-6 space-y-2">
                             <li><strong>Eliminates eye movement</strong> - Your eyes stay fixed on one spot instead of scanning across lines</li>
                             <li><strong>Reduces subvocalization</strong> - Minimizes the internal "voice" that slows down reading</li>
                             <li><strong>Increases focus</strong> - Forces attention on individual words without distractions</li>
@@ -70,34 +70,34 @@
                         </ul>
                     </div>
                     
-                    <div class="help-columns">
+                    <div class="help-columns grid grid-cols-1 md:grid-cols-2 gap-8 my-8">
                         <div class="help-column">
-                            <h3>🚀 Getting Started</h3>
-                            <ol>
+                            <h3 class="text-xl font-semibold mb-3 mt-6">🚀 Getting Started</h3>
+                            <ol class="ml-6 space-y-2 leading-relaxed">
                                 <li><strong>Load Text:</strong> Go to the "Load Text" tab to paste text, upload a PDF, or choose from the library</li>
                                 <li><strong>Set Speed:</strong> In the "Speed Reader" tab, adjust WPM (words per minute) with the slider</li>
                                 <li><strong>Press Play:</strong> Click ▶️ or press spacebar to start</li>
                             </ol>
                             
-                            <h3>📖 Reading Modes</h3>
-                            <ul>
+                            <h3 class="text-xl font-semibold mb-3 mt-6">📖 Reading Modes</h3>
+                            <ul class="ml-6 space-y-2 leading-relaxed">
                                 <li><strong>Manual Speed:</strong> Fixed reading speed you control</li>
                                 <li><strong>Practice Mode:</strong> Speed gradually increases over time</li>
                             </ul>
                         </div>
                         
                         <div class="help-column">
-                            <h3>⌨️ Keyboard Shortcuts</h3>
-                            <ul>
-                                <li><kbd>Space</kbd> - Play/Pause</li>
-                                <li><kbd>←</kbd> / <kbd>→</kbd> - Previous/Next word</li>
-                                <li><kbd>↑</kbd> / <kbd>↓</kbd> - Increase/Decrease speed (±25 WPM)</li>
-                                <li><kbd>R</kbd> - Reset to beginning</li>
-                                <li><kbd>S</kbd> - Toggle sidebar text view</li>
+                            <h3 class="text-xl font-semibold mb-3 mt-6">⌨️ Keyboard Shortcuts</h3>
+                            <ul class="ml-6 space-y-2 leading-relaxed">
+                                <li><kbd class="px-2 py-1 bg-[var(--bg-color)] border border-[var(--border-color)] rounded text-sm font-mono">Space</kbd> - Play/Pause</li>
+                                <li><kbd class="px-2 py-1 bg-[var(--bg-color)] border border-[var(--border-color)] rounded text-sm font-mono">←</kbd> / <kbd class="px-2 py-1 bg-[var(--bg-color)] border border-[var(--border-color)] rounded text-sm font-mono">→</kbd> - Previous/Next word</li>
+                                <li><kbd class="px-2 py-1 bg-[var(--bg-color)] border border-[var(--border-color)] rounded text-sm font-mono">↑</kbd> / <kbd class="px-2 py-1 bg-[var(--bg-color)] border border-[var(--border-color)] rounded text-sm font-mono">↓</kbd> - Increase/Decrease speed (±25 WPM)</li>
+                                <li><kbd class="px-2 py-1 bg-[var(--bg-color)] border border-[var(--border-color)] rounded text-sm font-mono">R</kbd> - Reset to beginning</li>
+                                <li><kbd class="px-2 py-1 bg-[var(--bg-color)] border border-[var(--border-color)] rounded text-sm font-mono">S</kbd> - Toggle sidebar text view</li>
                             </ul>
                             
-                            <h3>💡 Tips</h3>
-                            <ul>
+                            <h3 class="text-xl font-semibold mb-3 mt-6">💡 Tips</h3>
+                            <ul class="ml-6 space-y-2 leading-relaxed">
                                 <li>Start at 200-250 WPM and gradually increase</li>
                                 <li>Focus on the center of each word</li>
                                 <li>Don't try to subvocalize (say words in your head)</li>
@@ -107,7 +107,7 @@
                         </div>
                     </div>
                     
-                    <p class="help-footer">
+                    <p class="help-footer mt-8 p-4 bg-[var(--sidebar-bg)] rounded-lg border-l-4 border-primary">
                         <strong>Project Gutenberg Library:</strong> Access thousands of free public domain books. Search by title or author, or browse popular classics.
                     </p>
                 </div>
@@ -115,7 +115,7 @@
 
             <!-- Tab 2: Text Input -->
             <div id="inputPanel" class="tab-panel" role="tabpanel" aria-labelledby="input-tab" aria-hidden="true">
-                <div class="input-content">
+                <div class="input-content max-w-6xl mx-auto p-8">
                     <div class="flex bg-gray-100 rounded-lg p-1 mb-6" role="tablist" aria-label="Text input methods" data-tab-group="input">
                         <button class="flex-1 px-4 py-2 text-sm font-medium rounded-md bg-white text-primary shadow-sm transition-all duration-200" data-tab="paste" role="tab" aria-selected="true" aria-controls="pasteTab">Paste Text</button>
                         <button class="flex-1 px-4 py-2 text-sm font-medium rounded-md text-gray-600 hover:text-gray-900 transition-all duration-200" data-tab="upload" role="tab" aria-selected="false" aria-controls="uploadTab">Upload PDF</button>
@@ -123,25 +123,25 @@
                     </div>
 
                     <div id="pasteTab" class="tab-content active">
-                        <textarea id="textInput" placeholder="Paste your text here..."></textarea>
-                        <button id="loadTextBtn" class="btn btn-primary">Load Text</button>
+                        <textarea id="textInput" class="w-full min-h-[200px] p-4 border border-[var(--border-color)] rounded-md text-base resize-y bg-[var(--bg-color)] text-[var(--text-color)] mb-4 focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Paste your text here..."></textarea>
+                        <button id="loadTextBtn" class="btn btn-primary px-6 py-2 bg-primary text-white rounded-md hover:bg-[var(--primary-hover)] transition-colors">Load Text</button>
                     </div>
 
                     <div id="uploadTab" class="tab-content">
-                        <div class="upload-area">
+                        <div class="upload-area border-2 border-dashed border-[var(--border-color)] rounded-lg p-12 text-center">
                             <input type="file" id="pdfInput" accept=".pdf" class="hidden">
-                            <label for="pdfInput" class="upload-label">
+                            <label for="pdfInput" class="upload-label block cursor-pointer text-lg text-[var(--text-color)] hover:opacity-70 transition-opacity">
                                 📄 Click to upload PDF or drag & drop
                             </label>
-                            <div id="uploadStatus"></div>
+                            <div id="uploadStatus" class="mt-4 text-sm"></div>
                         </div>
                     </div>
 
                     <div id="libraryTab" class="tab-content">
-                        <div class="library-controls">
-                            <input type="text" id="searchInput" placeholder="Search books or authors...">
-                            <button id="searchGutenbergBtn" class="btn">Search Catalog</button>
-                            <select id="categoryFilter">
+                        <div class="library-controls flex gap-4 mb-4 flex-wrap">
+                            <input type="text" id="searchInput" class="flex-1 min-w-[200px] px-3 py-2 border border-[var(--border-color)] rounded-md bg-[var(--bg-color)] text-[var(--text-color)] focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Search books or authors...">
+                            <button id="searchGutenbergBtn" class="btn px-4 py-2 border border-[var(--border-color)] bg-[var(--bg-color)] text-[var(--text-color)] rounded-md hover:bg-[var(--sidebar-bg)] transition-colors">Search Catalog</button>
+                            <select id="categoryFilter" class="px-3 py-2 border border-[var(--border-color)] rounded-md bg-[var(--bg-color)] text-[var(--text-color)] focus:outline-none focus:ring-2 focus:ring-primary">
                                 <option value="">All Categories</option>
                                 <option value="fiction">Fiction</option>
                                 <option value="science">Science</option>
@@ -150,10 +150,10 @@
                                 <option value="other">Other</option>
                             </select>
                         </div>
-                        <div class="library-info">
+                        <div class="library-info mb-4 text-[var(--text-color)] opacity-70 text-sm">
                             <small>Popular classics below load instantly. Use "Search Catalog" to find more books from Project Gutenberg's full collection.</small>
                         </div>
-                        <div id="bookList" class="book-list">
+                        <div id="bookList" class="book-list grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4 max-h-[400px] overflow-y-auto p-2">
                             <div class="loading">Loading library...</div>
                         </div>
                     </div>
@@ -162,55 +162,55 @@
 
             <!-- Tab 3: Speed Reader -->
             <div id="readerPanel" class="tab-panel" role="tabpanel" aria-labelledby="reader-tab" aria-hidden="true">
-                <div class="reader-container">
-                    <div id="wordDisplay" class="word-display">
-                        <span id="currentWord">Welcome</span>
+                <div class="reader-container flex-1 flex flex-col items-center p-8 max-w-6xl mx-auto w-full">
+                    <div id="wordDisplay" class="word-display flex-1 flex items-center justify-center min-h-[300px] w-full bg-[var(--word-display-bg)] border-2 border-[var(--border-color)] rounded-lg mb-8 shadow-lg">
+                        <span id="currentWord" class="text-5xl font-medium tracking-wider select-none">Welcome</span>
                     </div>
                     
                     <!-- Speed Controls -->
-                    <div class="speed-controls">
-                        <div class="speed-info">
+                    <div class="speed-controls w-full max-w-xl mb-8">
+                        <div class="speed-info flex justify-between mb-2">
                             <label for="speedSlider">Speed (WPM):</label>
                             <span id="speedValue">250</span>
                         </div>
-                        <input type="range" id="speedSlider" min="100" max="1000" value="250" step="10">
+                        <input type="range" id="speedSlider" class="w-full mb-4" min="100" max="1000" value="250" step="10">
                         
-                        <div class="mode-toggle">
-                            <label>
+                        <div class="mode-toggle flex gap-4 mb-4">
+                            <label class="flex items-center gap-2 cursor-pointer">
                                 <input type="radio" name="mode" value="manual" checked>
                                 Manual Speed
                             </label>
-                            <label>
+                            <label class="flex items-center gap-2 cursor-pointer">
                                 <input type="radio" name="mode" value="practice">
                                 Practice Mode
                             </label>
                         </div>
                         
-                        <div id="practiceOptions" class="practice-options hidden">
-                            <label>
-                                Start Speed: <input type="number" id="startSpeed" value="200" min="100" max="500">
+                        <div id="practiceOptions" class="practice-options hidden flex gap-4 p-4 bg-[var(--sidebar-bg)] rounded-md">
+                            <label class="flex items-center gap-2">
+                                Start Speed: <input type="number" id="startSpeed" class="w-20 px-2 py-1 border border-[var(--border-color)] rounded bg-[var(--bg-color)] text-[var(--text-color)]" value="200" min="100" max="500">
                             </label>
-                            <label>
-                                Ramp Rate: <input type="number" id="rampRate" value="10" min="5" max="50"> WPM/min
+                            <label class="flex items-center gap-2">
+                                Ramp Rate: <input type="number" id="rampRate" class="w-20 px-2 py-1 border border-[var(--border-color)] rounded bg-[var(--bg-color)] text-[var(--text-color)]" value="10" min="5" max="50"> WPM/min
                             </label>
                         </div>
                     </div>
 
                     <!-- Playback Controls -->
-                    <div class="playback-controls">
-                        <button id="prevBtn" class="btn">⏮️</button>
-                        <button id="playPauseBtn" class="btn btn-primary">▶️ Start</button>
-                        <button id="nextBtn" class="btn">⏭️</button>
-                        <button id="resetBtn" class="btn">🔄 Reset</button>
-                        <button id="sidebarToggleBtn" class="btn">📖 Text</button>
+                    <div class="playback-controls flex gap-4 mb-8 flex-wrap justify-center">
+                        <button id="prevBtn" class="btn px-4 py-2 border border-[var(--border-color)] bg-[var(--bg-color)] text-[var(--text-color)] rounded-md hover:bg-[var(--sidebar-bg)] transition-colors">⏮️</button>
+                        <button id="playPauseBtn" class="btn btn-primary px-6 py-2 bg-primary text-white rounded-md hover:bg-[var(--primary-hover)] transition-colors">▶️ Start</button>
+                        <button id="nextBtn" class="btn px-4 py-2 border border-[var(--border-color)] bg-[var(--bg-color)] text-[var(--text-color)] rounded-md hover:bg-[var(--sidebar-bg)] transition-colors">⏭️</button>
+                        <button id="resetBtn" class="btn px-4 py-2 border border-[var(--border-color)] bg-[var(--bg-color)] text-[var(--text-color)] rounded-md hover:bg-[var(--sidebar-bg)] transition-colors">🔄 Reset</button>
+                        <button id="sidebarToggleBtn" class="btn px-4 py-2 border border-[var(--border-color)] bg-[var(--bg-color)] text-[var(--text-color)] rounded-md hover:bg-[var(--sidebar-bg)] transition-colors">📖 Text</button>
                     </div>
 
                     <!-- Progress Bar -->
-                    <div class="progress-container">
-                        <div id="progressBar" class="progress-bar">
-                            <div id="progressFill" class="progress-fill"></div>
+                    <div class="progress-container w-full max-w-2xl">
+                        <div id="progressBar" class="progress-bar h-2 bg-[var(--border-color)] rounded-full overflow-hidden mb-2">
+                            <div id="progressFill" class="progress-fill h-full bg-primary w-0 transition-all duration-300"></div>
                         </div>
-                        <div class="progress-info">
+                        <div class="progress-info flex justify-between text-sm text-[var(--text-color)] opacity-70">
                             <span id="wordCount">0 / 0 words</span>
                             <span id="timeRemaining">0:00 remaining</span>
                         </div>
@@ -222,24 +222,24 @@
 
         <!-- Sidebar for Text Navigation -->
         <aside id="textSidebar" class="text-sidebar">
-            <div class="sidebar-header">
-                <h3>Text Navigation</h3>
-                <button id="closeSidebarBtn" class="btn-icon">✕</button>
+            <div class="sidebar-header flex justify-between items-center p-4 border-b border-[var(--border-color)]">
+                <h3 class="text-lg font-semibold">Text Navigation</h3>
+                <button id="closeSidebarBtn" class="btn-icon p-2 text-xl text-[var(--text-color)] hover:opacity-70 transition-opacity cursor-pointer">✕</button>
             </div>
-            <div id="fullText" class="full-text"></div>
+            <div id="fullText" class="full-text flex-1 p-4 overflow-y-auto text-sm leading-relaxed"></div>
         </aside>
 
         <!-- Settings Modal -->
         <div id="settingsModal" class="modal">
             <div class="modal-content modal-large">
-                <div class="modal-header">
-                    <h2>Settings</h2>
-                    <button id="closeSettingsBtn" class="btn-icon">✕</button>
+                <div class="modal-header flex justify-between items-center p-6 border-b border-[var(--border-color)]">
+                    <h2 class="text-2xl font-semibold m-0">Settings</h2>
+                    <button id="closeSettingsBtn" class="btn-icon p-2 text-xl text-[var(--text-color)] hover:opacity-70 transition-opacity cursor-pointer">✕</button>
                 </div>
-                <div class="modal-body">
+                <div class="modal-body p-6">
                     <!-- Theme Presets -->
-                    <div class="settings-group">
-                        <h3>Theme Presets</h3>
+                    <div class="settings-group mb-8">
+                        <h3 class="text-lg font-semibold mb-4">Theme Presets</h3>
                         <div class="theme-presets">
                             <button class="theme-preset" data-preset="light">
                                 <span class="theme-preview" data-theme="light" style="background: #fff; color: #000;">Aa</span>
