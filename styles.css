@@ -745,29 +745,32 @@ kbd {
 /* Color Settings */
 .color-settings {
     display: grid;
-    gap: 1rem;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem 2rem;
 }
 
 .color-setting {
-    display: grid;
-    grid-template-columns: 120px 1fr;
+    display: flex;
+    justify-content: space-between;
     align-items: center;
     gap: 1rem;
 }
 
 .color-setting span {
     font-weight: 500;
+    flex-shrink: 0;
 }
 
 .color-input-group {
     display: flex;
     gap: 0.5rem;
     align-items: center;
+    flex-shrink: 0;
 }
 
 input[type="color"] {
-    width: 50px;
-    height: 35px;
+    width: 40px;
+    height: 40px;
     border: 1px solid var(--border-color);
     border-radius: 0.25rem;
     cursor: pointer;
