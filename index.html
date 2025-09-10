@@ -38,9 +38,6 @@
         <!-- Header -->
         <header class="flex justify-between items-center p-6 border-b border-[var(--border-color)]">
             <h1 class="text-2xl font-bold text-primary">Speed Reader</h1>
-            <div>
-                <button id="settingsBtn" class="p-2 rounded-lg hover:bg-gray-100 hover:bg-opacity-10 transition-colors text-2xl" title="Settings">⚙️</button>
-            </div>
         </header>
 
         <!-- Main Tab Navigation -->
@@ -195,6 +192,38 @@
                             </label>
                         </div>
                     </div>
+                    
+                    <!-- Reading Controls -->
+                    <div class="reading-controls w-full max-w-xl mb-6">
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            <!-- Font Size Control -->
+                            <div class="font-size-control">
+                                <div class="flex justify-between items-center mb-2">
+                                    <label for="fontSizeSlider" class="text-sm font-medium">Font Size:</label>
+                                    <span id="fontSizeValue" class="text-sm">48px</span>
+                                </div>
+                                <input type="range" id="fontSizeSlider" class="w-full" min="20" max="100" value="48">
+                            </div>
+                            
+                            <!-- Reading Options -->
+                            <div class="reading-options flex flex-col gap-2">
+                                <label class="flex items-center gap-2 text-sm cursor-pointer">
+                                    <input type="checkbox" id="highlightCenter" class="rounded border-[var(--border-color)]">
+                                    <span>Highlight center</span>
+                                </label>
+                                <label class="flex items-center gap-2 text-sm cursor-pointer">
+                                    <input type="checkbox" id="showPunctuation" checked class="rounded border-[var(--border-color)]">
+                                    <span>Pause on punctuation</span>
+                                </label>
+                            </div>
+                            
+                            <!-- Quick Actions -->
+                            <div class="quick-actions flex flex-col gap-2">
+                                <button id="sidebarToggleBtn" class="btn text-sm px-3 py-2 border border-[var(--border-color)] bg-[var(--bg-color)] text-[var(--text-color)] rounded-md hover:bg-[var(--sidebar-bg)] transition-colors">📖 Show Text</button>
+                                <button id="settingsBtn" class="btn text-sm px-3 py-2 border border-[var(--border-color)] bg-[var(--bg-color)] text-[var(--text-color)] rounded-md hover:bg-[var(--sidebar-bg)] transition-colors">⚙️ Themes</button>
+                            </div>
+                        </div>
+                    </div>
 
                     <!-- Playback Controls -->
                     <div class="playback-controls flex gap-4 mb-8 flex-wrap justify-center">
@@ -202,7 +231,6 @@
                         <button id="playPauseBtn" class="btn btn-primary px-6 py-2 bg-primary text-white rounded-md hover:bg-[var(--primary-hover)] transition-colors">▶️ Start</button>
                         <button id="nextBtn" class="btn px-4 py-2 border border-[var(--border-color)] bg-[var(--bg-color)] text-[var(--text-color)] rounded-md hover:bg-[var(--sidebar-bg)] transition-colors">⏭️</button>
                         <button id="resetBtn" class="btn px-4 py-2 border border-[var(--border-color)] bg-[var(--bg-color)] text-[var(--text-color)] rounded-md hover:bg-[var(--sidebar-bg)] transition-colors">🔄 Reset</button>
-                        <button id="sidebarToggleBtn" class="btn px-4 py-2 border border-[var(--border-color)] bg-[var(--bg-color)] text-[var(--text-color)] rounded-md hover:bg-[var(--sidebar-bg)] transition-colors">📖 Text</button>
                     </div>
 
                     <!-- Progress Bar -->
@@ -321,11 +349,6 @@
                     <!-- Font Settings -->
                     <div class="settings-group">
                         <h3>Typography</h3>
-                        <label>
-                            Font Size:
-                            <input type="range" id="fontSizeSlider" min="20" max="100" value="48">
-                            <span id="fontSizeValue">48px</span>
-                        </label>
                         
                         <label>Font Family:</label>
                         <div class="font-grid">
@@ -405,17 +428,6 @@
                     </div>
 
                     <!-- Reading Settings -->
-                    <div class="settings-group">
-                        <h3>Reading Settings</h3>
-                        <label>
-                            <input type="checkbox" id="highlightCenter">
-                            Highlight center letter
-                        </label>
-                        <label>
-                            <input type="checkbox" id="showPunctuation" checked>
-                            Pause on punctuation
-                        </label>
-                    </div>
 
                     <!-- Actions -->
                     <div class="settings-actions">
@@ -427,7 +439,18 @@
         </div>
     </div>
 
+    <!-- External Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    
+    <!-- Application Modules (load order is important) -->
+    <script src="storageManager.js"></script>
+    <script src="textProcessor.js"></script>
+    <script src="playbackController.js"></script>
+    <script src="uiController.js"></script>
+    <script src="settingsManager.js"></script>
+    <script src="libraryManager.js"></script>
+    
+    <!-- Main Application (must be loaded last) -->
     <script src="app.js"></script>
 </body>
 </html>

@@ -1,249 +1,346 @@
 /**
- * SpeedReader - RSVP Speed Reading Application
+ * SpeedReader - RSVP Speed Reading Application (Modular Version)
  * 
- * Main application class that handles:
- * - RSVP text display and timing
- * - User interface controls and settings
- * - PDF processing and library management
- * - Theme customization and persistence
- * - Analytics integration
+ * Main application orchestrator that coordinates between specialized modules:
+ * - TextProcessor: Text loading and processing
+ * - PlaybackController: RSVP playback logic
+ * - UIController: Display and interface management
+ * - SettingsManager: Themes and settings
+ * - LibraryManager: Project Gutenberg integration
+ * - StorageManager: Data persistence
  * 
  * Architecture:
- * - Single-class design with logical method grouping
- * - Event-driven UI updates
- * - Local storage for settings persistence
- * - Progressive Web App capabilities
+ * - Modular design with clear separation of concerns
+ * - Event-driven communication between modules
+ * - Centralized coordination and state management
  */
 class SpeedReader {
     /**
-     * Initialize the SpeedReader application with default settings
-     * Sets up core properties, loads user preferences, and initializes UI
+     * Initialize the SpeedReader application with modular architecture
      */
     constructor() {
-        this.words = [];
-        this.currentIndex = 0;
-        this.isPlaying = false;
-        this.intervalId = null;
-        this.currentWPM = 250;
-        this.mode = 'manual';
-        this.practiceStartSpeed = 200;
-        this.practiceRampRate = 10;
-        this.practiceStartTime = null;
-        this.settings = {
-            fontSize: 48,
-            theme: 'light',
-            fontFamily: 'system-ui, -apple-system, sans-serif',
-            highlightCenter: false,
-            pauseOnPunctuation: true,
-            customColors: {
-                background: '#ffffff',
-                text: '#000000',
-                accent: '#2563eb',
-                displayBg: '#ffffff',
-                border: '#e5e7eb'
-            }
-        };
-        
-        this.customThemes = this.loadCustomThemes();
-        
-        this.initializeElements();
-        this.loadSettings();
-        this.attachEventListeners();
-        this.initializePDFJS();
-        
-        // Initialize analytics reference - only tracks text loading methods
+        // Initialize analytics reference
         this.analytics = window.speedReaderAnalytics;
+        
+        // Initialize all modules
+        this.initializeModules();
+        
+        // Setup inter-module communication
+        this.setupModuleCommunication();
+        
+        // Setup event listeners
+        this.attachEventListeners();
+        
+        // Load initial state
+        this.initialize();
     }
 
-    /* ===== INITIALIZATION METHODS ===== */
+    /**
+     * Initialize all application modules
+     */
+    initializeModules() {
+        // Core modules
+        this.textProcessor = new TextProcessor(this.analytics);
+        this.playbackController = new PlaybackController();
+        this.uiController = new UIController();
+        this.settingsManager = new SettingsManager();
+        this.storageManager = new StorageManager();
+        this.libraryManager = new LibraryManager(this.textProcessor);
+        
+        // Initialize DOM elements that modules might need
+        this.initializeElements();
+    }
 
     /**
-     * Initialize DOM element references for efficient access
-     * Caches frequently used elements to avoid repeated queries
+     * Initialize DOM element references not handled by modules
      */
     initializeElements() {
-        // Display elements
-        this.wordDisplay = document.getElementById('currentWord');
-        this.speedSlider = document.getElementById('speedSlider');
-        this.speedValue = document.getElementById('speedValue');
-        this.progressBar = document.getElementById('progressFill');
-        this.wordCount = document.getElementById('wordCount');
-        this.timeRemaining = document.getElementById('timeRemaining');
-        
-        // Controls
-        this.playPauseBtn = document.getElementById('playPauseBtn');
-        this.prevBtn = document.getElementById('prevBtn');
-        this.nextBtn = document.getElementById('nextBtn');
-        this.resetBtn = document.getElementById('resetBtn');
-        
         // Input elements
         this.textInput = document.getElementById('textInput');
         this.loadTextBtn = document.getElementById('loadTextBtn');
         this.pdfInput = document.getElementById('pdfInput');
-        this.uploadStatus = document.getElementById('uploadStatus');
         
-        // Settings
+        // Settings modal
         this.settingsBtn = document.getElementById('settingsBtn');
         this.settingsModal = document.getElementById('settingsModal');
         this.closeSettingsBtn = document.getElementById('closeSettingsBtn');
-        this.fontSizeSlider = document.getElementById('fontSizeSlider');
-        this.fontSizeValue = document.getElementById('fontSizeValue');
-        this.themeSelect = document.getElementById('themeSelect');
-        this.fontSelect = document.getElementById('fontSelect');
-        this.highlightCenterCheck = document.getElementById('highlightCenter');
-        this.pausePunctuationCheck = document.getElementById('showPunctuation');
-        
-        // Sidebar
-        this.textSidebar = document.getElementById('textSidebar');
-        this.closeSidebarBtn = document.getElementById('closeSidebarBtn');
-        this.fullText = document.getElementById('fullText');
         
         // Practice mode
         this.practiceOptions = document.getElementById('practiceOptions');
         this.startSpeedInput = document.getElementById('startSpeed');
         this.rampRateInput = document.getElementById('rampRate');
         
-        // Library
-        this.searchInput = document.getElementById('searchInput');
-        this.categoryFilter = document.getElementById('categoryFilter');
-        this.bookList = document.getElementById('bookList');
+        // Control elements
+        this.speedSlider = document.getElementById('speedSlider');
+        this.playPauseBtn = document.getElementById('playPauseBtn');
+        this.prevBtn = document.getElementById('prevBtn');
+        this.nextBtn = document.getElementById('nextBtn');
+        this.resetBtn = document.getElementById('resetBtn');
     }
 
+    /**
+     * Setup communication between modules
+     */
+    setupModuleCommunication() {
+        // PlaybackController callbacks
+        this.playbackController.onWordChange = (word, index) => {
+            this.uiController.displayWord(word, index);
+        };
+        
+        this.playbackController.onProgressUpdate = (currentIndex, totalWords) => {
+            this.uiController.updateProgress(currentIndex, totalWords, this.playbackController.currentWPM);
+            // Save position when progress updates
+            this.savePosition();
+        };
+        
+        this.playbackController.onPlayStateChange = (isPlaying) => {
+            this.uiController.updatePlayButton(isPlaying);
+        };
+        
+        this.playbackController.onSpeedChange = (wpm) => {
+            this.uiController.updateSpeedDisplay(wpm);
+        };
+        
+        this.playbackController.onStop = () => {
+            this.savePosition();
+        };
+        
+        // UIController callbacks
+        this.uiController.onWordClick = (index, word) => {
+            this.playbackController.setPosition(index);
+            this.uiController.updateProgress(index, this.playbackController.words.length, this.playbackController.currentWPM);
+            this.uiController.highlightCurrentWord();
+        };
+        
+        // SettingsManager callbacks
+        this.settingsManager.onSettingsChange = (settings) => {
+            this.uiController.setHighlightCenter(settings.highlightCenter);
+            this.playbackController.pauseOnPunctuation = settings.pauseOnPunctuation;
+        };
+        
+        // LibraryManager callbacks
+        this.libraryManager.onBookLoad = (processedData, title) => {
+            this.loadProcessedText(processedData);
+            this.storageManager.saveToHistory('gutenberg', title);
+        };
+    }
+
+    /**
+     * Load processed text data into the application
+     * @param {Object} processedData - Processed text from TextProcessor
+     */
+    loadProcessedText(processedData) {
+        // Set data in playback controller
+        this.playbackController.setWords(processedData.words);
+        
+        // Set data in UI controller
+        this.uiController.setTextData(processedData.words, processedData.originalText);
+        
+        // Update display
+        this.uiController.updateProgress(0, processedData.words.length, this.playbackController.currentWPM);
+        if (processedData.words.length > 0) {
+            this.uiController.displayWord(processedData.words[0], 0);
+        } else {
+            this.uiController.displayWelcome();
+        }
+        
+        // Switch to reader tab
+        this.uiController.switchMainTab('reader');
+        
+        // Show in sidebar if open
+        const sidebarToggleBtn = document.getElementById('sidebarToggleBtn');
+        if (sidebarToggleBtn && document.getElementById('textSidebar')?.classList.contains('open')) {
+            this.uiController.displayFullText();
+        }
+        
+        // Save position
+        this.savePosition();
+    }
+
+    /**
+     * Initialize application after modules are set up
+     */
+    initialize() {
+        // Load settings
+        this.settingsManager.loadSettings();
+        
+        // Initialize color pickers
+        this.settingsManager.initializeColorPickers();
+        
+        // Setup library event listeners
+        this.libraryManager.setupEventListeners();
+        
+        // Load saved position if exists
+        this.loadPosition();
+    }
+
+    /**
+     * Attach event listeners for main application functionality
+     */
     attachEventListeners() {
         // Main tabs
         document.querySelectorAll('[data-tab-group="main"] [role="tab"]').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const tabName = e.target.dataset.tab;
-                const currentTab = document.querySelector('[data-tab-group="main"] [role="tab"][aria-selected="true"]')?.dataset.tab || 'unknown';
-                
-                
-                this.switchMainTab(tabName);
+                this.uiController.switchMainTab(tabName);
             });
         });
         
         // Playback controls
-        this.playPauseBtn.addEventListener('click', () => this.togglePlayPause());
-        this.prevBtn.addEventListener('click', () => this.previousWord());
-        this.nextBtn.addEventListener('click', () => this.nextWord());
-        this.resetBtn.addEventListener('click', () => this.reset());
+        this.playPauseBtn?.addEventListener('click', () => this.playbackController.togglePlayPause());
+        this.prevBtn?.addEventListener('click', () => this.playbackController.previousWord());
+        this.nextBtn?.addEventListener('click', () => this.playbackController.nextWord());
+        this.resetBtn?.addEventListener('click', () => this.playbackController.reset());
         
         // Speed control
-        this.speedSlider.addEventListener('input', (e) => {
-            const oldWPM = this.currentWPM;
+        this.speedSlider?.addEventListener('input', (e) => {
             const newWPM = parseInt(e.target.value);
-            this.currentWPM = newWPM;
-            this.speedValue.textContent = this.currentWPM;
-            
-            
-            if (this.isPlaying && this.mode === 'manual') {
-                this.stop();
-                this.play();
-            }
+            this.playbackController.setSpeed(newWPM, this.playbackController.pauseOnPunctuation);
         });
         
         // Mode toggle
         document.querySelectorAll('input[name="mode"]').forEach(radio => {
             radio.addEventListener('change', (e) => {
-                const oldMode = this.mode;
-                this.mode = e.target.value;
+                const mode = e.target.value;
+                this.practiceOptions?.classList.toggle('hidden', mode !== 'practice');
                 
-                
-                this.practiceOptions.classList.toggle('hidden', this.mode !== 'practice');
-                if (this.mode === 'practice') {
-                    this.practiceStartSpeed = parseInt(this.startSpeedInput.value);
-                    this.practiceRampRate = parseInt(this.rampRateInput.value);
+                if (mode === 'practice') {
+                    const startSpeed = parseInt(this.startSpeedInput?.value || 200);
+                    const rampRate = parseInt(this.rampRateInput?.value || 10);
+                    this.playbackController.setMode('practice', startSpeed, rampRate);
+                } else {
+                    this.playbackController.setMode('manual');
                 }
             });
         });
         
         // Practice mode settings
-        this.startSpeedInput.addEventListener('change', (e) => {
-            const oldValue = this.practiceStartSpeed;
-            this.practiceStartSpeed = parseInt(e.target.value);
-            
+        this.startSpeedInput?.addEventListener('change', (e) => {
+            const startSpeed = parseInt(e.target.value);
+            const rampRate = parseInt(this.rampRateInput?.value || 10);
+            this.playbackController.setMode('practice', startSpeed, rampRate);
         });
         
-        this.rampRateInput.addEventListener('change', (e) => {
-            const oldValue = this.practiceRampRate;
-            this.practiceRampRate = parseInt(e.target.value);
-            
+        this.rampRateInput?.addEventListener('change', (e) => {
+            const rampRate = parseInt(e.target.value);
+            const startSpeed = parseInt(this.startSpeedInput?.value || 200);
+            this.playbackController.setMode('practice', startSpeed, rampRate);
         });
         
         // Text input
-        this.loadTextBtn.addEventListener('click', () => {
-            const text = this.textInput.value.trim();
+        this.loadTextBtn?.addEventListener('click', () => {
+            const text = this.textInput?.value.trim();
             if (text) {
-                this.loadText(text, { 
+                const processedData = this.textProcessor.processText(text, { 
                     method: 'paste', 
                     source: 'manual_paste',
                     title: text.substring(0, 50) + '...'
                 });
-                this.saveToHistory('manual', text.substring(0, 100) + '...');
+                this.loadProcessedText(processedData);
+                this.storageManager.saveToHistory('manual', text.substring(0, 100) + '...');
             }
         });
         
         // PDF upload
-        this.pdfInput.addEventListener('change', (e) => {
+        this.pdfInput?.addEventListener('change', async (e) => {
             const file = e.target.files[0];
             if (file && file.type === 'application/pdf') {
-                this.loadPDF(file);
+                try {
+                    const processedData = await this.textProcessor.loadPDF(file, (status) => {
+                        this.uiController.updateUploadStatus(status);
+                    });
+                    this.loadProcessedText(processedData);
+                    this.storageManager.saveToHistory('pdf', processedData.fileName);
+                    this.uiController.updateUploadStatus(processedData.statusMessage, true);
+                } catch (error) {
+                    this.uiController.updateUploadStatus('Error loading PDF', true);
+                }
             }
         });
         
         // Drag and drop for PDF
         const uploadArea = document.querySelector('.upload-area');
-        uploadArea.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            uploadArea.style.background = 'var(--sidebar-bg)';
-        });
-        
-        uploadArea.addEventListener('dragleave', (e) => {
-            e.preventDefault();
-            uploadArea.style.background = '';
-        });
-        
-        uploadArea.addEventListener('drop', (e) => {
-            e.preventDefault();
-            uploadArea.style.background = '';
-            const file = e.dataTransfer.files[0];
-            if (file && file.type === 'application/pdf') {
-                this.loadPDF(file);
-            }
-        });
+        if (uploadArea) {
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.style.background = 'var(--sidebar-bg)';
+            });
+            
+            uploadArea.addEventListener('dragleave', (e) => {
+                e.preventDefault();
+                uploadArea.style.background = '';
+            });
+            
+            uploadArea.addEventListener('drop', async (e) => {
+                e.preventDefault();
+                uploadArea.style.background = '';
+                const file = e.dataTransfer.files[0];
+                if (file && file.type === 'application/pdf') {
+                    try {
+                        const processedData = await this.textProcessor.loadPDF(file, (status) => {
+                            this.uiController.updateUploadStatus(status);
+                        });
+                        this.loadProcessedText(processedData);
+                        this.storageManager.saveToHistory('pdf', processedData.fileName);
+                        this.uiController.updateUploadStatus(processedData.statusMessage, true);
+                    } catch (error) {
+                        this.uiController.updateUploadStatus('Error loading PDF', true);
+                    }
+                }
+            });
+        }
         
         // Settings
-        this.settingsBtn.addEventListener('click', () => {
-            this.settingsModal.classList.add('open');
-            this.displayCustomThemes(); // Display custom themes
-            this.updateSettingsUI(); // Update UI when modal opens
+        this.settingsBtn?.addEventListener('click', () => {
+            this.settingsModal?.classList.add('open');
+            this.settingsManager.displayCustomThemes();
+            this.settingsManager.updateSettingsUI();
         });
         
-        this.closeSettingsBtn.addEventListener('click', () => {
-            this.settingsModal.classList.remove('open');
+        this.closeSettingsBtn?.addEventListener('click', () => {
+            this.settingsModal?.classList.remove('open');
         });
         
-        this.fontSizeSlider.addEventListener('input', (e) => {
-            const oldValue = this.settings.fontSize;
-            this.settings.fontSize = parseInt(e.target.value);
-            this.fontSizeValue.textContent = this.settings.fontSize + 'px';
-            
-            
-            this.applySettings();
-        });
+        // Settings controls
+        const fontSizeSlider = document.getElementById('fontSizeSlider');
+        const fontSizeValue = document.getElementById('fontSizeValue');
+        if (fontSizeSlider) {
+            fontSizeSlider.addEventListener('input', (e) => {
+                const fontSize = parseInt(e.target.value);
+                this.settingsManager.updateSetting('fontSize', fontSize);
+                // Update display immediately
+                if (fontSizeValue) {
+                    fontSizeValue.textContent = fontSize + 'px';
+                }
+            });
+        }
+        
+        const highlightCenterCheck = document.getElementById('highlightCenter');
+        if (highlightCenterCheck) {
+            highlightCenterCheck.addEventListener('change', (e) => {
+                this.settingsManager.updateSetting('highlightCenter', e.target.checked);
+                
+                // Immediately redisplay current word to show the effect
+                const state = this.playbackController.getState();
+                if (state.totalWords > 0 && state.currentIndex < state.totalWords) {
+                    const currentWord = this.playbackController.words[state.currentIndex];
+                    this.uiController.displayWord(currentWord, state.currentIndex);
+                }
+            });
+        }
+        
+        const pausePunctuationCheck = document.getElementById('showPunctuation');
+        if (pausePunctuationCheck) {
+            pausePunctuationCheck.addEventListener('change', (e) => {
+                this.settingsManager.updateSetting('pauseOnPunctuation', e.target.checked);
+            });
+        }
         
         // Theme presets
         document.querySelectorAll('.theme-preset').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const theme = btn.dataset.preset;
-                const oldTheme = this.settings.theme;
-                this.settings.theme = theme;
-                
-                    
-                // Update custom colors to match the preset
-                this.updateCustomColorsFromTheme(theme);
-                
-                this.applySettings();
-                this.updateSettingsUI();
+                this.settingsManager.setTheme(theme);
             });
         });
         
@@ -251,60 +348,23 @@ class SpeedReader {
         document.querySelectorAll('.font-option').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const font = btn.dataset.font;
-                const oldFont = this.settings.fontFamily;
-                this.settings.fontFamily = font;
-                
-                    
-                this.applySettings();
-                this.updateSettingsUI();
+                this.settingsManager.updateSetting('fontFamily', font);
             });
-        });
-        
-        // Color pickers
-        this.initializeColorPickers();
-        
-        // Legacy theme select (if still exists)
-        if (this.themeSelect) {
-            this.themeSelect.addEventListener('change', (e) => {
-                this.settings.theme = e.target.value;
-                this.applySettings();
-            });
-        }
-        
-        // Legacy font select (if still exists)
-        if (this.fontSelect) {
-            this.fontSelect.addEventListener('change', (e) => {
-                this.settings.fontFamily = e.target.value;
-                this.applySettings();
-            });
-        }
-        
-        this.highlightCenterCheck.addEventListener('change', (e) => {
-            const oldValue = this.settings.highlightCenter;
-            this.settings.highlightCenter = e.target.checked;
-            
-            
-            this.applySettings();
-        });
-        
-        this.pausePunctuationCheck.addEventListener('change', (e) => {
-            const oldValue = this.settings.pauseOnPunctuation;
-            this.settings.pauseOnPunctuation = e.target.checked;
-            
         });
         
         // Sidebar toggle button
         const sidebarToggleBtn = document.getElementById('sidebarToggleBtn');
         if (sidebarToggleBtn) {
             sidebarToggleBtn.addEventListener('click', () => {
-                this.toggleSidebar();
+                this.uiController.toggleSidebar();
             });
         }
         
         // Close sidebar button
-        if (this.closeSidebarBtn) {
-            this.closeSidebarBtn.addEventListener('click', () => {
-                this.textSidebar.classList.remove('open');
+        const closeSidebarBtn = document.getElementById('closeSidebarBtn');
+        if (closeSidebarBtn) {
+            closeSidebarBtn.addEventListener('click', () => {
+                this.uiController.closeSidebar();
             });
         }
         
@@ -312,33 +372,18 @@ class SpeedReader {
         document.querySelectorAll('[data-tab-group="input"] [role="tab"]').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const tabName = e.target.dataset.tab;
-                this.switchTab(tabName);
+                this.uiController.switchTab(tabName);
             });
         });
         
-        // Library
-        this.searchInput.addEventListener('input', () => this.searchBooks());
-        this.categoryFilter.addEventListener('change', () => this.filterBooks());
-        
-        // Search Gutenberg button
-        const searchGutenbergBtn = document.getElementById('searchGutenbergBtn');
-        if (searchGutenbergBtn) {
-            searchGutenbergBtn.addEventListener('click', () => {
-                const query = this.searchInput.value.trim();
-                if (query) {
-                    this.searchGutenberg(query);
-                } else {
-                    this.loadLibrary(); // Load default books if no query
-                }
-            });
-            
-            // Also search when Enter is pressed in search input
-            this.searchInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    const query = this.searchInput.value.trim();
-                    if (query) {
-                        this.searchGutenberg(query);
-                    }
+        // Library tab loading
+        let libraryLoaded = false;
+        const libraryTab = document.querySelector('[data-tab="library"]');
+        if (libraryTab) {
+            libraryTab.addEventListener('click', () => {
+                if (!libraryLoaded) {
+                    this.libraryManager.loadLibrary();
+                    libraryLoaded = true;
                 }
             });
         }
@@ -350,1269 +395,70 @@ class SpeedReader {
             switch(e.key) {
                 case ' ':
                     e.preventDefault();
-                    this.togglePlayPause();
+                    this.playbackController.togglePlayPause();
                     break;
                 case 'ArrowLeft':
-                    this.previousWord();
+                    this.playbackController.previousWord();
                     break;
                 case 'ArrowRight':
-                    this.nextWord();
+                    this.playbackController.nextWord();
                     break;
                 case 'ArrowUp':
                     e.preventDefault();
-                    this.increaseSpeed();
+                    this.playbackController.increaseSpeed();
                     break;
                 case 'ArrowDown':
                     e.preventDefault();
-                    this.decreaseSpeed();
+                    this.playbackController.decreaseSpeed();
                     break;
                 case 'r':
-                    this.reset();
+                    this.playbackController.reset();
                     break;
                 case 's':
-                    this.toggleSidebar();
+                    this.uiController.toggleSidebar();
                     break;
             }
         });
-        
-        // Load library on tab switch
-        let libraryLoaded = false;
-        document.querySelector('[data-tab="library"]').addEventListener('click', () => {
-            if (!libraryLoaded) {
-                this.loadLibrary();
-                libraryLoaded = true;
-            }
-        });
     }
-
-    /* ===== TEXT PROCESSING ===== */
 
     /**
-     * Load and prepare text for RSVP display
-     * @param {string} text - The text to be displayed
-     * @param {Object} metadata - Optional metadata about the text source
+     * Save current reading position
      */
-    loadText(text, metadata = {}) {
-        // Store original text for sidebar display
-        this.originalText = text;
-        
-        // Clean and process text for word display
-        const cleanedText = text.replace(/\s+/g, ' ').trim();
-        this.words = cleanedText.split(' ').filter(word => word.length > 0);
-        this.currentIndex = 0;
-        this.updateDisplay();
-        this.updateProgress();
-        
-        // Track text loading method - only analytics we collect  
-        if (this.analytics && metadata.method) {
-            this.analytics.trackTextLoad(metadata.method);
-        }
-        
-        // Switch to reader tab when text is loaded
-        this.switchMainTab('reader');
-        
-        // Show in sidebar if open
-        if (this.textSidebar.classList.contains('open')) {
-            this.displayFullText();
-        }
-        
-        // Save position
-        this.savePosition();
-    }
-
-    async loadPDF(file) {
-        this.uploadStatus.textContent = 'Loading PDF...';
-        
-        try {
-            const arrayBuffer = await file.arrayBuffer();
-            const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
-            let fullText = '';
-            
-            for (let i = 1; i <= pdf.numPages; i++) {
-                const page = await pdf.getPage(i);
-                const textContent = await page.getTextContent();
-                const pageText = textContent.items.map(item => item.str).join(' ');
-                fullText += pageText + ' ';
-            }
-            
-            this.loadText(fullText, { 
-                method: 'pdf_upload', 
-                source: 'pdf_file',
-                title: file.name,
-                pages: pdf.numPages
-            });
-            this.uploadStatus.textContent = `Loaded ${pdf.numPages} pages`;
-            this.saveToHistory('pdf', file.name);
-            
-            setTimeout(() => {
-                this.uploadStatus.textContent = '';
-            }, 3000);
-        } catch (error) {
-            console.error('Error loading PDF:', error);
-            this.uploadStatus.textContent = 'Error loading PDF';
-        }
-    }
-
-    initializePDFJS() {
-        if (typeof pdfjsLib !== 'undefined') {
-            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-        }
-    }
-
-    /* ===== PLAYBACK CONTROLS ===== */
-
-    /**
-     * Start RSVP text playback at current speed
-     * Handles both manual speed and practice mode with ramping
-     */
-    play() {
-        if (this.words.length === 0) return;
-        
-        this.isPlaying = true;
-        this.playPauseBtn.textContent = '⏸️ Pause';
-        
-        if (this.mode === 'practice') {
-            this.practiceStartTime = Date.now();
-            this.currentWPM = this.practiceStartSpeed;
-        }
-        
-        
-        const showNextWord = () => {
-            if (this.currentIndex >= this.words.length) {
-                this.stop();
-                return;
-            }
-            
-            const word = this.words[this.currentIndex];
-            this.displayWord(word);
-            this.currentIndex++;
-            this.updateProgress();
-            
-            // Calculate delay
-            let delay = 60000 / this.currentWPM;
-            
-            // Add extra delay for punctuation
-            if (this.settings.pauseOnPunctuation && /[.!?;]/.test(word)) {
-                delay *= 1.5;
-            }
-            
-            // Update speed in practice mode
-            if (this.mode === 'practice' && this.practiceStartTime) {
-                const elapsedMinutes = (Date.now() - this.practiceStartTime) / 60000;
-                const newSpeed = Math.min(
-                    this.practiceStartSpeed + (this.practiceRampRate * elapsedMinutes),
-                    1000
-                );
-                this.currentWPM = Math.round(newSpeed);
-                this.speedValue.textContent = this.currentWPM;
-                this.speedSlider.value = this.currentWPM;
-            }
-            
-            this.intervalId = setTimeout(showNextWord, delay);
-        };
-        
-        showNextWord();
-    }
-
-    stop() {
-        this.isPlaying = false;
-        this.playPauseBtn.textContent = '▶️ Start';
-        if (this.intervalId) {
-            clearTimeout(this.intervalId);
-            this.intervalId = null;
-        }
-        
-        
-        this.savePosition();
-    }
-
-    togglePlayPause() {
-        if (this.isPlaying) {
-            this.stop();
-        } else {
-            this.play();
-        }
-    }
-
-    previousWord() {
-        if (this.currentIndex > 0) {
-            this.currentIndex--;
-            this.displayWord(this.words[this.currentIndex]);
-            this.updateProgress();
-        }
-    }
-
-    nextWord() {
-        if (this.currentIndex < this.words.length - 1) {
-            this.currentIndex++;
-            this.displayWord(this.words[this.currentIndex]);
-            this.updateProgress();
-        }
-    }
-
-    reset() {
-        this.stop();
-        this.currentIndex = 0;
-        if (this.words.length > 0) {
-            this.displayWord(this.words[0]);
-        } else {
-            this.wordDisplay.textContent = 'Welcome';
-        }
-        this.updateProgress();
-        
-    }
-
-    increaseSpeed() {
-        const newSpeed = Math.min(this.currentWPM + 25, 1000);
-        this.updateSpeed(newSpeed, 'keyboard');
-    }
-
-    decreaseSpeed() {
-        const newSpeed = Math.max(this.currentWPM - 25, 100);
-        this.updateSpeed(newSpeed, 'keyboard');
-    }
-
-    updateSpeed(newSpeed, method = 'programmatic') {
-        const oldWPM = this.currentWPM;
-        this.currentWPM = newSpeed;
-        this.speedValue.textContent = this.currentWPM;
-        this.speedSlider.value = this.currentWPM;
-        
-        
-        // If currently playing in manual mode, restart with new speed
-        if (this.isPlaying && this.mode === 'manual') {
-            this.stop();
-            this.play();
-        }
-    }
-    
-    toggleSidebar() {
-        if (!this.textSidebar) {
-            console.error('Sidebar element not found');
-            return;
-        }
-        
-        const wasOpen = this.textSidebar.classList.contains('open');
-        this.textSidebar.classList.toggle('open');
-        const isOpen = this.textSidebar.classList.contains('open');
-        
-        
-        // If opening and we have text, display it
-        if (isOpen && this.words.length > 0) {
-            this.displayFullText();
-        }
-    }
-
-    /* ===== DISPLAY AND UI UPDATES ===== */
-
-    /**
-     * Display a word in the RSVP viewer with visual enhancements
-     * @param {string} word - The word to display
-     */
-    displayWord(word) {
-        if (this.settings.highlightCenter && word.length > 1) {
-            const centerIndex = Math.floor(word.length / 2);
-            const before = word.substring(0, centerIndex);
-            const center = word[centerIndex];
-            const after = word.substring(centerIndex + 1);
-            this.wordDisplay.innerHTML = `${before}<span style="color: var(--primary-color)">${center}</span>${after}`;
-        } else {
-            this.wordDisplay.textContent = word;
-        }
-        
-        // Update sidebar highlight if open
-        if (this.textSidebar.classList.contains('open')) {
-            this.highlightCurrentWord();
-        }
-    }
-
-    updateProgress() {
-        const progress = this.words.length > 0 ? ((this.currentIndex + 1) / this.words.length) * 100 : 0;
-        this.progressBar.style.width = progress + '%';
-        this.wordCount.textContent = `${this.currentIndex + 1} / ${this.words.length} words`;
-        
-        // Calculate time remaining
-        if (this.words.length > 0 && this.currentIndex < this.words.length) {
-            const wordsRemaining = this.words.length - this.currentIndex;
-            const minutesRemaining = wordsRemaining / this.currentWPM;
-            const seconds = Math.round(minutesRemaining * 60);
-            const displayMinutes = Math.floor(seconds / 60);
-            const displaySeconds = seconds % 60;
-            this.timeRemaining.textContent = `${displayMinutes}:${displaySeconds.toString().padStart(2, '0')} remaining`;
-        } else {
-            this.timeRemaining.textContent = '0:00 remaining';
-        }
-    }
-
-    displayFullText() {
-        if (!this.fullText) {
-            console.error('Full text element not found');
-            return;
-        }
-        
-        this.fullText.innerHTML = '';
-        
-        if (!this.originalText || this.originalText.length === 0) {
-            // Fallback if no original text stored - reconstruct from words
-            if (this.words && this.words.length > 0) {
-                this.words.forEach((word, index) => {
-                    const span = document.createElement('span');
-                    span.className = 'word';
-                    span.textContent = word + ' ';
-                    span.dataset.index = index;
-                    if (index === this.currentIndex) {
-                        span.classList.add('current');
-                    }
-                    span.addEventListener('click', () => {
-                        this.currentIndex = index;
-                        this.displayWord(word);
-                        this.updateProgress();
-                        this.highlightCurrentWord();
-                    });
-                    this.fullText.appendChild(span);
-                });
-            }
-            return;
-        }
-        
-        // Split text into paragraphs
-        const paragraphs = this.originalText.split(/\n\s*\n/);
-        let wordIndex = 0;
-        
-        paragraphs.forEach((paragraph, pIndex) => {
-            if (!paragraph.trim()) return;
-            
-            const paragraphDiv = document.createElement('div');
-            paragraphDiv.className = 'text-paragraph';
-            
-            // Split paragraph into words while preserving structure
-            const paragraphWords = paragraph.replace(/\s+/g, ' ').trim().split(' ');
-            
-            paragraphWords.forEach(word => {
-                if (!word) return;
-                
-                // Find the corresponding index in our main words array
-                let currentWordIndex = wordIndex;
-                if (currentWordIndex < this.words.length && this.words[currentWordIndex] === word) {
-                    const span = document.createElement('span');
-                    span.className = 'word';
-                    span.textContent = word + ' ';
-                    span.dataset.index = currentWordIndex;
-                    
-                    if (currentWordIndex === this.currentIndex) {
-                        span.classList.add('current');
-                    }
-                    
-                    const index = currentWordIndex;
-                    span.addEventListener('click', () => {
-                        this.currentIndex = index;
-                        this.displayWord(this.words[index]);
-                        this.updateProgress();
-                        this.highlightCurrentWord();
-                    });
-                    
-                    paragraphDiv.appendChild(span);
-                    wordIndex++;
-                }
-            });
-            
-            this.fullText.appendChild(paragraphDiv);
-        });
-    }
-
-    highlightCurrentWord() {
-        document.querySelectorAll('.full-text .word').forEach(word => {
-            word.classList.remove('current');
-        });
-        const currentWord = document.querySelector(`.full-text .word[data-index="${this.currentIndex}"]`);
-        if (currentWord) {
-            currentWord.classList.add('current');
-            currentWord.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-    }
-
-    /* ===== NAVIGATION AND TABS ===== */
-
-    /**
-     * Handle sub-tab switching within panels (e.g., paste/upload/library tabs)
-     * @param {string} tabName - The name of the tab to switch to
-     */
-    switchTab(tabName) {
-        // Update secondary tab buttons
-        document.querySelectorAll('[data-tab-group="input"] [role="tab"]').forEach(btn => {
-            const isActive = btn.dataset.tab === tabName;
-            btn.classList.toggle('bg-white', isActive);
-            btn.classList.toggle('text-primary', isActive);
-            btn.classList.toggle('shadow-sm', isActive);
-            btn.classList.toggle('text-gray-600', !isActive);
-            btn.setAttribute('aria-selected', isActive);
-        });
-        
-        // Update tab content
-        document.querySelectorAll('.tab-content').forEach(content => {
-            content.classList.remove('active');
-        });
-        document.getElementById(tabName + 'Tab').classList.add('active');
-    }
-
-    switchMainTab(tabName) {
-        // Update main tab buttons only
-        document.querySelectorAll('[data-tab-group="main"] [role="tab"]').forEach(btn => {
-            const isActive = btn.dataset.tab === tabName;
-            btn.classList.toggle('border-primary', isActive);
-            btn.classList.toggle('text-primary', isActive);
-            btn.classList.toggle('bg-white', isActive);
-            btn.classList.toggle('bg-opacity-50', isActive);
-            btn.classList.toggle('border-transparent', !isActive);
-            btn.classList.toggle('text-gray-600', !isActive);
-            btn.setAttribute('aria-selected', isActive);
-        });
-        
-        // Update main tab panels
-        document.querySelectorAll('.tab-panel').forEach(panel => {
-            panel.classList.remove('active');
-        });
-        document.getElementById(tabName + 'Panel').classList.add('active');
-        
-        // Special handling for certain tabs
-        if (tabName === 'input') {
-            // Initialize secondary tab state - ensure paste tab is active by default
-            this.switchTab('paste');
-            
-            // Load library when switching to input tab if library hasn't been loaded
-            let libraryLoaded = false;
-            const libraryTabBtn = document.querySelector('[data-tab-group="input"] [role="tab"][data-tab="library"]');
-            if (libraryTabBtn && !libraryLoaded) {
-                // Only load if library tab is active
-                if (document.getElementById('libraryTab').classList.contains('active')) {
-                    this.loadLibrary();
-                    libraryLoaded = true;
-                }
-            }
-        }
-    }
-
-    async loadLibrary() {
-        this.bookList.innerHTML = '<div class="loading">Loading popular titles...</div>';
-        
-        // Load hardcoded popular titles for fast initial display
-        this.books = this.getPopularBooks();
-        this.allBooks = this.books;
-        this.displayBooks(this.books);
-    }
-
-    /* ===== LIBRARY MANAGEMENT ===== */
-
-    /**
-     * Fetch and display popular books from Project Gutenberg
-     * Uses curated list for quick loading, falls back to API search
-     */
-    getPopularBooks() {
-        return [
-            {
-                id: 2701,
-                title: "Moby Dick; Or, The Whale",
-                author: "Herman Melville",
-                category: "fiction",
-                subjects: ["Fiction", "Adventure stories", "Whales -- Fiction"],
-                formats: { "text/plain": `https://www.gutenberg.org/files/2701/2701-0.txt` }
-            },
-            {
-                id: 84,
-                title: "Frankenstein; Or, The Modern Prometheus",
-                author: "Mary Wollstonecraft Shelley",
-                category: "fiction",
-                subjects: ["Fiction", "Gothic fiction", "Science fiction"],
-                formats: { "text/plain": `https://www.gutenberg.org/files/84/84-0.txt` }
-            },
-            {
-                id: 1513,
-                title: "Romeo and Juliet",
-                author: "William Shakespeare",
-                category: "fiction",
-                subjects: ["Fiction", "Tragedies", "Drama"],
-                formats: { "text/plain": `https://www.gutenberg.org/files/1513/1513-0.txt` }
-            },
-            {
-                id: 1342,
-                title: "Pride and Prejudice",
-                author: "Jane Austen",
-                category: "fiction",
-                subjects: ["Fiction", "Romance", "England -- Fiction"],
-                formats: { "text/plain": `https://www.gutenberg.org/files/1342/1342-0.txt` }
-            },
-            {
-                id: 2641,
-                title: "A Room with a View",
-                author: "E. M. Forster",
-                category: "fiction",
-                subjects: ["Fiction", "British -- Italy -- Fiction"],
-                formats: { "text/plain": `https://www.gutenberg.org/files/2641/2641-0.txt` }
-            },
-            {
-                id: 100,
-                title: "The Complete Works of William Shakespeare",
-                author: "William Shakespeare",
-                category: "fiction",
-                subjects: ["Fiction", "Drama", "Poetry"],
-                formats: { "text/plain": `https://www.gutenberg.org/files/100/100-0.txt` }
-            },
-            {
-                id: 145,
-                title: "Middlemarch",
-                author: "George Eliot",
-                category: "fiction",
-                subjects: ["Fiction", "England -- Fiction", "Bildungsromans"],
-                formats: { "text/plain": `https://www.gutenberg.org/files/145/145-0.txt` }
-            },
-            {
-                id: 11,
-                title: "Alice's Adventures in Wonderland",
-                author: "Lewis Carroll",
-                category: "fiction",
-                subjects: ["Fiction", "Fantasy fiction", "Children's stories"],
-                formats: { "text/plain": `https://www.gutenberg.org/files/11/11-0.txt` }
-            },
-            {
-                id: 37106,
-                title: "Little Women; Or, Meg, Jo, Beth, and Amy",
-                author: "Louisa May Alcott",
-                category: "fiction",
-                subjects: ["Fiction", "Family -- Fiction", "Sisters -- Fiction"],
-                formats: { "text/plain": `https://www.gutenberg.org/files/37106/37106-0.txt` }
-            },
-            {
-                id: 1661,
-                title: "The Adventures of Sherlock Holmes",
-                author: "Arthur Conan Doyle",
-                category: "fiction",
-                subjects: ["Fiction", "Mystery fiction", "Detective stories"],
-                formats: { "text/plain": `https://www.gutenberg.org/files/1661/1661-0.txt` }
-            },
-            {
-                id: 74,
-                title: "The Adventures of Tom Sawyer",
-                author: "Mark Twain",
-                category: "fiction",
-                subjects: ["Fiction", "Adventure stories", "Boys -- Fiction"],
-                formats: { "text/plain": `https://www.gutenberg.org/files/74/74-0.txt` }
-            },
-            {
-                id: 1260,
-                title: "Jane Eyre: An Autobiography",
-                author: "Charlotte Brontë",
-                category: "fiction",
-                subjects: ["Fiction", "Gothic fiction", "Orphans -- Fiction"],
-                formats: { "text/plain": `https://www.gutenberg.org/files/1260/1260-0.txt` }
-            }
-        ];
-    }
-    
-    categorizeBook(subjects) {
-        const subjectsLower = subjects.join(' ').toLowerCase();
-        if (subjectsLower.includes('fiction') || subjectsLower.includes('novel') || subjectsLower.includes('stories')) {
-            return 'fiction';
-        } else if (subjectsLower.includes('science') || subjectsLower.includes('biology') || subjectsLower.includes('physics')) {
-            return 'science';
-        } else if (subjectsLower.includes('history') || subjectsLower.includes('historical')) {
-            return 'history';
-        } else if (subjectsLower.includes('philosophy') || subjectsLower.includes('ethics')) {
-            return 'philosophy';
-        }
-        return 'other';
-    }
-    
-    loadFallbackBooks() {
-        // Curated list with correct IDs that actually work
-        const fallbackBooks = [
-            { id: 1342, title: 'Pride and Prejudice', author: 'Jane Austen', category: 'fiction' },
-            { id: 2701, title: 'Moby Dick', author: 'Herman Melville', category: 'fiction' },
-            { id: 1661, title: 'The Adventures of Sherlock Holmes', author: 'Arthur Conan Doyle', category: 'fiction' },
-            { id: 11, title: 'Alice\'s Adventures in Wonderland', author: 'Lewis Carroll', category: 'fiction' },
-            { id: 84, title: 'Frankenstein', author: 'Mary Shelley', category: 'fiction' },
-            { id: 844, title: 'The Importance of Being Earnest', author: 'Oscar Wilde', category: 'fiction' },
-            { id: 98, title: 'A Tale of Two Cities', author: 'Charles Dickens', category: 'fiction' },
-            { id: 1232, title: 'The Prince', author: 'Niccolò Machiavelli', category: 'philosophy' },
-            { id: 174, title: 'The Picture of Dorian Gray', author: 'Oscar Wilde', category: 'fiction' },
-            { id: 345, title: 'Dracula', author: 'Bram Stoker', category: 'fiction' }
-        ];
-        
-        this.books = fallbackBooks;
-        this.allBooks = fallbackBooks;
-        this.displayBooks(this.books);
-    }
-
-    displayBooks(books) {
-        this.bookList.innerHTML = '';
-        books.forEach(book => {
-            const bookItem = document.createElement('div');
-            bookItem.className = 'book-item';
-            bookItem.innerHTML = `
-                <div class="book-title">${book.title}</div>
-                <div class="book-author">${book.author}</div>
-            `;
-            bookItem.addEventListener('click', () => this.loadBookFromGutenberg(book.id, book.title));
-            this.bookList.appendChild(bookItem);
-        });
-    }
-
-    async loadBookFromGutenberg(bookId, title) {
-        this.bookList.innerHTML = '<div class="loading">Loading book text...</div>';
-        
-        try {
-            // Try multiple URL patterns for Project Gutenberg
-            const urlPatterns = [
-                `https://www.gutenberg.org/files/${bookId}/${bookId}-0.txt`,
-                `https://www.gutenberg.org/cache/epub/${bookId}/pg${bookId}.txt`,
-                `https://www.gutenberg.org/ebooks/${bookId}.txt.utf-8`
-            ];
-            
-            let text = null;
-            let successUrl = null;
-            
-            // Try each URL pattern
-            for (const url of urlPatterns) {
-                try {
-                    const response = await fetch(url);
-                    if (response.ok) {
-                        text = await response.text();
-                        successUrl = url;
-                        break;
-                    }
-                } catch (err) {
-                    console.log(`Failed to fetch from ${url}`, err);
-                }
-            }
-            
-            // If direct fetch fails, try using a CORS proxy
-            if (!text) {
-                const corsProxy = 'https://corsproxy.io/?';
-                const gutenbergUrl = `https://www.gutenberg.org/files/${bookId}/${bookId}-0.txt`;
-                const response = await fetch(corsProxy + encodeURIComponent(gutenbergUrl));
-                if (response.ok) {
-                    text = await response.text();
-                    successUrl = 'CORS proxy';
-                }
-            }
-            
-            if (text) {
-                // Clean up the text - remove Project Gutenberg headers/footers
-                const startMarkers = ['*** START OF THE PROJECT GUTENBERG', '*** START OF THIS PROJECT GUTENBERG', '*END*THE SMALL PRINT!'];
-                const endMarkers = ['*** END OF THE PROJECT GUTENBERG', '*** END OF THIS PROJECT GUTENBERG', 'End of the Project Gutenberg'];
-                
-                let cleanText = text;
-                
-                // Find and remove header
-                for (const marker of startMarkers) {
-                    const startIndex = cleanText.indexOf(marker);
-                    if (startIndex !== -1) {
-                        const endOfLine = cleanText.indexOf('\n', startIndex);
-                        cleanText = cleanText.substring(endOfLine + 1);
-                        break;
-                    }
-                }
-                
-                // Find and remove footer
-                for (const marker of endMarkers) {
-                    const endIndex = cleanText.indexOf(marker);
-                    if (endIndex !== -1) {
-                        cleanText = cleanText.substring(0, endIndex);
-                        break;
-                    }
-                }
-                
-                this.loadText(cleanText, { 
-                    method: 'project_gutenberg', 
-                    source: 'gutenberg_library',
-                    title: title,
-                    bookId: bookId
-                });
-                this.saveToHistory('gutenberg', title);
-                // Text will automatically switch to reader tab via loadText method
-                this.bookList.innerHTML = `<div class="loading">Loaded: ${title}</div>`;
-                setTimeout(() => this.displayBooks(this.books), 2000);
-            } else {
-                throw new Error('Could not fetch book text');
-            }
-        } catch (error) {
-            console.error('Error loading book:', error);
-            this.bookList.innerHTML = '<div class="loading">Error loading book. Some books may not be available due to format or server issues. Please try another book.</div>';
-            setTimeout(() => this.displayBooks(this.books), 3000);
-        }
-    }
-
-    searchBooks() {
-        const searchTerm = this.searchInput.value.toLowerCase();
-        const category = this.categoryFilter.value;
-        
-        let filtered = this.allBooks || this.books;
-        
-        // Apply search filter
-        if (searchTerm) {
-            filtered = filtered.filter(book => 
-                book.title.toLowerCase().includes(searchTerm) ||
-                book.author.toLowerCase().includes(searchTerm)
-            );
-        }
-        
-        // Apply category filter
-        if (category) {
-            filtered = filtered.filter(book => book.category === category);
-        }
-        
-        this.displayBooks(filtered);
-    }
-
-    filterBooks() {
-        this.searchBooks(); // Use unified search/filter
-    }
-    
-    async searchGutenberg(query) {
-        try {
-            this.bookList.innerHTML = '<div class="loading">Searching Project Gutenberg...</div>';
-            const response = await fetch(`https://gutendex.com/books/?search=${encodeURIComponent(query)}&mime_type=text%2Fplain&languages=en`);
-            const data = await response.json();
-            
-            this.books = data.results.map(book => ({
-                id: book.id,
-                title: book.title,
-                author: book.authors.length > 0 ? book.authors[0].name : 'Unknown',
-                subjects: book.subjects,
-                formats: book.formats,
-                category: this.categorizeBook(book.subjects || [])
-            }));
-            
-            this.allBooks = this.books;
-            this.displayBooks(this.books);
-        } catch (error) {
-            console.error('Search error:', error);
-            this.bookList.innerHTML = '<div class="loading">Search failed. Please try again.</div>';
-        }
-    }
-
-    /* ===== THEME AND SETTINGS MANAGEMENT ===== */
-
-    /**
-     * Initialize color picker controls for custom theme creation
-     * Sets up event listeners and synchronizes UI with current colors
-     */
-    initializeColorPickers() {
-        // Background color
-        const bgPicker = document.getElementById('bgColorPicker');
-        const bgText = document.getElementById('bgColorText');
-        if (bgPicker && bgText) {
-            bgPicker.addEventListener('input', (e) => {
-                bgText.value = e.target.value;
-                this.settings.customColors.background = e.target.value;
-                this.applyCustomColors();
-            });
-            bgText.addEventListener('input', (e) => {
-                if (/^#[0-9A-Fa-f]{6}$/.test(e.target.value)) {
-                    bgPicker.value = e.target.value;
-                    this.settings.customColors.background = e.target.value;
-                    this.applyCustomColors();
-                }
-            });
-        }
-        
-        // Text color
-        const textPicker = document.getElementById('textColorPicker');
-        const textColorText = document.getElementById('textColorText');
-        if (textPicker && textColorText) {
-            textPicker.addEventListener('input', (e) => {
-                textColorText.value = e.target.value;
-                this.settings.customColors.text = e.target.value;
-                this.applyCustomColors();
-            });
-            textColorText.addEventListener('input', (e) => {
-                if (/^#[0-9A-Fa-f]{6}$/.test(e.target.value)) {
-                    textPicker.value = e.target.value;
-                    this.settings.customColors.text = e.target.value;
-                    this.applyCustomColors();
-                }
-            });
-        }
-        
-        // Accent color
-        const accentPicker = document.getElementById('accentColorPicker');
-        const accentText = document.getElementById('accentColorText');
-        if (accentPicker && accentText) {
-            accentPicker.addEventListener('input', (e) => {
-                accentText.value = e.target.value;
-                this.settings.customColors.accent = e.target.value;
-                this.applyCustomColors();
-            });
-            accentText.addEventListener('input', (e) => {
-                if (/^#[0-9A-Fa-f]{6}$/.test(e.target.value)) {
-                    accentPicker.value = e.target.value;
-                    this.settings.customColors.accent = e.target.value;
-                    this.applyCustomColors();
-                }
-            });
-        }
-        
-        // Display background color
-        const displayBgPicker = document.getElementById('displayBgColorPicker');
-        const displayBgText = document.getElementById('displayBgColorText');
-        if (displayBgPicker && displayBgText) {
-            displayBgPicker.addEventListener('input', (e) => {
-                displayBgText.value = e.target.value;
-                this.settings.customColors.displayBg = e.target.value;
-                this.applyCustomColors();
-            });
-            displayBgText.addEventListener('input', (e) => {
-                if (/^#[0-9A-Fa-f]{6}$/.test(e.target.value)) {
-                    displayBgPicker.value = e.target.value;
-                    this.settings.customColors.displayBg = e.target.value;
-                    this.applyCustomColors();
-                }
-            });
-        }
-        
-        // Border color
-        const borderPicker = document.getElementById('borderColorPicker');
-        const borderText = document.getElementById('borderColorText');
-        if (borderPicker && borderText) {
-            borderPicker.addEventListener('input', (e) => {
-                borderText.value = e.target.value;
-                this.settings.customColors.border = e.target.value;
-                this.applyCustomColors();
-            });
-            borderText.addEventListener('input', (e) => {
-                if (/^#[0-9A-Fa-f]{6}$/.test(e.target.value)) {
-                    borderPicker.value = e.target.value;
-                    this.settings.customColors.border = e.target.value;
-                    this.applyCustomColors();
-                }
-            });
-        }
-        
-        // Save custom theme button
-        const saveCustomBtn = document.getElementById('saveCustomTheme');
-        if (saveCustomBtn) {
-            saveCustomBtn.addEventListener('click', () => {
-                this.saveCustomTheme();
-            });
-        }
-        
-        // Reset defaults button
-        const resetBtn = document.getElementById('resetDefaults');
-        if (resetBtn) {
-            resetBtn.addEventListener('click', () => {
-                this.resetToDefaults();
-            });
-        }
-    }
-    
-    applyCustomColors() {
-        this.settings.theme = 'custom';
-        document.body.dataset.theme = 'custom';
-        
-        // Apply custom colors as CSS variables
-        const root = document.documentElement;
-        root.style.setProperty('--bg-color', this.settings.customColors.background);
-        root.style.setProperty('--text-color', this.settings.customColors.text);
-        root.style.setProperty('--primary-color', this.settings.customColors.accent);
-        root.style.setProperty('--word-display-bg', this.settings.customColors.displayBg);
-        root.style.setProperty('--border-color', this.settings.customColors.border);
-        
-        // Calculate sidebar background (slightly different from main background)
-        const sidebarBg = this.lightenDarkenColor(this.settings.customColors.background, 10);
-        root.style.setProperty('--sidebar-bg', sidebarBg);
-        
-        // Calculate hover color for primary
-        const primaryHover = this.lightenDarkenColor(this.settings.customColors.accent, -20);
-        root.style.setProperty('--primary-hover', primaryHover);
-        
-        this.saveSettings();
-    }
-    
-    lightenDarkenColor(col, amt) {
-        let usePound = false;
-        if (col[0] == "#") {
-            col = col.slice(1);
-            usePound = true;
-        }
-        let num = parseInt(col, 16);
-        let r = (num >> 16) + amt;
-        if (r > 255) r = 255;
-        else if (r < 0) r = 0;
-        let b = ((num >> 8) & 0x00FF) + amt;
-        if (b > 255) b = 255;
-        else if (b < 0) b = 0;
-        let g = (num & 0x0000FF) + amt;
-        if (g > 255) g = 255;
-        else if (g < 0) g = 0;
-        return (usePound ? "#" : "") + (g | (b << 8) | (r << 16)).toString(16).padStart(6, '0');
-    }
-    
-    loadCustomThemes() {
-        const saved = localStorage.getItem('speedReaderCustomThemes');
-        return saved ? JSON.parse(saved) : {};
-    }
-    
-    saveCustomThemes() {
-        localStorage.setItem('speedReaderCustomThemes', JSON.stringify(this.customThemes));
-    }
-    
-    saveCustomTheme() {
-        const themeName = prompt('Enter a name for your custom theme:');
-        if (!themeName || themeName.trim() === '') {
-            return;
-        }
-        
-        const safeName = themeName.trim().toLowerCase().replace(/[^a-z0-9]/g, '-');
-        
-        // Save the current colors as a new theme
-        this.customThemes[safeName] = {
-            name: themeName.trim(),
-            colors: {
-                background: this.settings.customColors.background,
-                text: this.settings.customColors.text,
-                accent: this.settings.customColors.accent,
-                displayBg: this.settings.customColors.displayBg,
-                border: this.settings.customColors.border
-            }
-        };
-        
-        this.saveCustomThemes();
-        this.settings.theme = 'custom-' + safeName;
-        this.saveSettings();
-        this.displayCustomThemes();
-        this.updateSettingsUI();
-        
-        alert(`Theme "${themeName}" saved successfully!`);
-    }
-    
-    deleteCustomTheme(themeId) {
-        const safeName = themeId.replace('custom-', '');
-        if (this.customThemes[safeName]) {
-            const themeName = this.customThemes[safeName].name;
-            if (confirm(`Delete theme "${themeName}"?`)) {
-                delete this.customThemes[safeName];
-                this.saveCustomThemes();
-                this.displayCustomThemes();
-                
-                // If this was the active theme, switch to light
-                if (this.settings.theme === themeId) {
-                    this.settings.theme = 'light';
-                    this.applySettings();
-                    this.updateSettingsUI();
-                }
-            }
-        }
-    }
-    
-    displayCustomThemes() {
-        const customThemesSection = document.getElementById('customThemesSection');
-        const customThemesList = document.getElementById('customThemesList');
-        
-        if (!customThemesList) return;
-        
-        // Clear existing custom themes
-        customThemesList.innerHTML = '';
-        
-        // Show/hide the section based on whether there are custom themes
-        const hasCustomThemes = Object.keys(this.customThemes).length > 0;
-        if (customThemesSection) {
-            customThemesSection.style.display = hasCustomThemes ? 'block' : 'none';
-        }
-        
-        // Add each custom theme
-        Object.entries(this.customThemes).forEach(([safeName, theme]) => {
-            const themeId = 'custom-' + safeName;
-            const button = document.createElement('button');
-            button.className = 'theme-preset custom-theme';
-            button.dataset.preset = themeId;
-            
-            // Create preview
-            const preview = document.createElement('span');
-            preview.className = 'theme-preview';
-            preview.style.background = theme.colors.background;
-            preview.style.color = theme.colors.text;
-            preview.textContent = 'Aa';
-            
-            // Create label
-            const label = document.createElement('span');
-            label.className = 'theme-label';
-            label.textContent = theme.name;
-            
-            // Create delete button
-            const deleteBtn = document.createElement('button');
-            deleteBtn.className = 'delete-theme-btn';
-            deleteBtn.textContent = '×';
-            deleteBtn.onclick = (e) => {
-                e.stopPropagation();
-                this.deleteCustomTheme(themeId);
-            };
-            
-            button.appendChild(preview);
-            button.appendChild(label);
-            button.appendChild(deleteBtn);
-            
-            // Add click handler
-            button.addEventListener('click', () => {
-                this.settings.theme = themeId;
-                this.settings.customColors = { ...theme.colors };
-                this.applySettings();
-                this.updateSettingsUI();
-            });
-            
-            customThemesList.appendChild(button);
-        });
-    }
-    
-    updateCustomColorsFromTheme(theme) {
-        // Check if it's a custom theme
-        if (theme.startsWith('custom-')) {
-            const safeName = theme.replace('custom-', '');
-            if (this.customThemes[safeName]) {
-                this.settings.customColors = { ...this.customThemes[safeName].colors };
-                return;
-            }
-        }
-        
-        // Define theme color values
-        const themeColors = {
-            light: {
-                background: '#ffffff',
-                text: '#1f2937',
-                accent: '#2563eb',
-                displayBg: '#ffffff',
-                border: '#e5e7eb'
-            },
-            dark: {
-                background: '#111827',
-                text: '#f3f4f6',
-                accent: '#2563eb',
-                displayBg: '#1f2937',
-                border: '#374151'
-            },
-            sepia: {
-                background: '#f4f1e8',
-                text: '#5c4b37',
-                accent: '#8b7355',
-                displayBg: '#faf8f3',
-                border: '#d4c4b0'
-            },
-            contrast: {
-                background: '#000000',
-                text: '#ffffff',
-                accent: '#ffffff',
-                displayBg: '#000000',
-                border: '#ffffff'
-            },
-            ocean: {
-                background: '#001f3f',
-                text: '#7fdbff',
-                accent: '#39cccc',
-                displayBg: '#002855',
-                border: '#0074d9'
-            },
-            forest: {
-                background: '#1a3626',
-                text: '#a8e6a3',
-                accent: '#66bb6a',
-                displayBg: '#244831',
-                border: '#4a7c59'
-            }
-        };
-        
-        // Update custom colors to match the selected theme
-        if (themeColors[theme]) {
-            this.settings.customColors = themeColors[theme];
-        }
-    }
-    
-    updateSettingsUI() {
-        // Update theme preset buttons
-        document.querySelectorAll('.theme-preset').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.preset === this.settings.theme);
-        });
-        
-        // Update font option buttons
-        document.querySelectorAll('.font-option').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.font === this.settings.fontFamily);
-        });
-        
-        // Always update color pickers to show current theme colors
-        const bgPicker = document.getElementById('bgColorPicker');
-        const bgText = document.getElementById('bgColorText');
-        if (bgPicker) bgPicker.value = this.settings.customColors.background;
-        if (bgText) bgText.value = this.settings.customColors.background;
-        
-        const textPicker = document.getElementById('textColorPicker');
-        const textColorText = document.getElementById('textColorText');
-        if (textPicker) textPicker.value = this.settings.customColors.text;
-        if (textColorText) textColorText.value = this.settings.customColors.text;
-        
-        const accentPicker = document.getElementById('accentColorPicker');
-        const accentText = document.getElementById('accentColorText');
-        if (accentPicker) accentPicker.value = this.settings.customColors.accent;
-        if (accentText) accentText.value = this.settings.customColors.accent;
-        
-        const displayBgPicker = document.getElementById('displayBgColorPicker');
-        const displayBgText = document.getElementById('displayBgColorText');
-        if (displayBgPicker) displayBgPicker.value = this.settings.customColors.displayBg;
-        if (displayBgText) displayBgText.value = this.settings.customColors.displayBg;
-        
-        const borderPicker = document.getElementById('borderColorPicker');
-        const borderText = document.getElementById('borderColorText');
-        if (borderPicker) borderPicker.value = this.settings.customColors.border || '#e5e7eb';
-        if (borderText) borderText.value = this.settings.customColors.border || '#e5e7eb';
-    }
-    
-    resetToDefaults() {
-        this.settings = {
-            fontSize: 48,
-            theme: 'light',
-            fontFamily: 'system-ui, -apple-system, sans-serif',
-            highlightCenter: false,
-            pauseOnPunctuation: true,
-            customColors: {
-                background: '#ffffff',
-                text: '#000000',
-                accent: '#2563eb',
-                displayBg: '#ffffff',
-                border: '#e5e7eb'
-            }
-        };
-        
-        // Reset UI elements
-        this.fontSizeSlider.value = 48;
-        this.fontSizeValue.textContent = '48px';
-        this.highlightCenterCheck.checked = false;
-        this.pausePunctuationCheck.checked = true;
-        
-        // Apply and save
-        this.applySettings();
-        this.updateSettingsUI();
-        
-        // Clear custom CSS properties
-        const root = document.documentElement;
-        root.style.removeProperty('--bg-color');
-        root.style.removeProperty('--text-color');
-        root.style.removeProperty('--primary-color');
-        root.style.removeProperty('--word-display-bg');
-        root.style.removeProperty('--sidebar-bg');
-        root.style.removeProperty('--border-color');
-    }
-    
-    applySettings() {
-        // Apply theme
-        if (this.settings.theme.startsWith('custom-')) {
-            document.body.dataset.theme = 'custom';
-            this.applyCustomColors();
-        } else {
-            document.body.dataset.theme = this.settings.theme;
-        }
-        
-        // Apply custom colors if custom theme
-        if (this.settings.theme === 'custom' || this.settings.theme.startsWith('custom-')) {
-            this.applyCustomColors();
-        } else {
-            // Clear custom CSS properties
-            const root = document.documentElement;
-            root.style.removeProperty('--bg-color');
-            root.style.removeProperty('--text-color');
-            root.style.removeProperty('--primary-color');
-            root.style.removeProperty('--word-display-bg');
-            root.style.removeProperty('--sidebar-bg');
-            root.style.removeProperty('--border-color');
-        }
-        
-        // Apply font settings
-        this.wordDisplay.style.fontSize = this.settings.fontSize + 'px';
-        this.wordDisplay.style.fontFamily = this.settings.fontFamily;
-        
-        // Apply highlight center
-        document.body.classList.toggle('highlight-center', this.settings.highlightCenter);
-        
-        // Save settings
-        this.saveSettings();
-    }
-
-    /* ===== DATA PERSISTENCE ===== */
-
-    /**
-     * Save current settings to localStorage for persistence across sessions
-     */
-    saveSettings() {
-        localStorage.setItem('speedReaderSettings', JSON.stringify(this.settings));
-    }
-
-    loadSettings() {
-        const saved = localStorage.getItem('speedReaderSettings');
-        if (saved) {
-            const loadedSettings = JSON.parse(saved);
-            // Merge with defaults to ensure all properties exist
-            this.settings = {
-                ...this.settings,
-                ...loadedSettings,
-                customColors: {
-                    ...this.settings.customColors,
-                    ...(loadedSettings.customColors || {})
-                }
-            };
-            this.applySettings();
-            
-            // Update UI
-            this.fontSizeSlider.value = this.settings.fontSize;
-            this.fontSizeValue.textContent = this.settings.fontSize + 'px';
-            if (this.themeSelect) this.themeSelect.value = this.settings.theme;
-            if (this.fontSelect) this.fontSelect.value = this.settings.fontFamily;
-            this.highlightCenterCheck.checked = this.settings.highlightCenter;
-            this.pausePunctuationCheck.checked = this.settings.pauseOnPunctuation;
-            
-            // Update new UI elements
-            this.updateSettingsUI();
-        }
-    }
-
     savePosition() {
-        if (this.words.length > 0) {
-            const position = {
-                text: this.words.join(' '),
-                originalText: this.originalText || this.words.join(' '), // Preserve original formatting
-                index: this.currentIndex,
-                timestamp: Date.now()
-            };
-            localStorage.setItem('speedReaderPosition', JSON.stringify(position));
+        const state = this.playbackController.getState();
+        if (state.totalWords > 0) {
+            this.storageManager.savePosition({
+                words: this.playbackController.words,
+                originalText: this.uiController.originalText,
+                index: state.currentIndex
+            });
         }
     }
 
+    /**
+     * Load saved reading position
+     */
     loadPosition() {
-        const saved = localStorage.getItem('speedReaderPosition');
-        if (saved) {
-            const position = JSON.parse(saved);
-            // Only restore if less than 24 hours old
-            if (Date.now() - position.timestamp < 86400000) {
-                // Use originalText if available to preserve formatting
-                const textToLoad = position.originalText || position.text;
-                this.loadText(textToLoad);
-                this.currentIndex = position.index;
-                this.updateDisplay();
-                this.updateProgress();
-            }
+        const position = this.storageManager.loadPosition();
+        if (position) {
+            // Use originalText if available to preserve formatting
+            const textToLoad = position.originalText || position.text;
+            const processedData = this.textProcessor.processText(textToLoad);
+            this.loadProcessedText(processedData);
+            this.playbackController.setPosition(position.index);
         }
     }
 
-    saveToHistory(type, title) {
-        let history = JSON.parse(localStorage.getItem('speedReaderHistory') || '[]');
-        history.unshift({
-            type,
-            title,
-            timestamp: Date.now()
-        });
-        // Keep only last 10 items
-        history = history.slice(0, 10);
-        localStorage.setItem('speedReaderHistory', JSON.stringify(history));
-    }
-
-    updateDisplay() {
-        if (this.words.length > 0 && this.currentIndex < this.words.length) {
-            this.displayWord(this.words[this.currentIndex]);
-        }
+    /**
+     * Get application state for debugging or external access
+     */
+    getState() {
+        return {
+            playback: this.playbackController.getState(),
+            settings: this.settingsManager.getSettings(),
+            books: this.libraryManager.getBooks(),
+            storageInfo: this.storageManager.getStorageInfo()
+        };
     }
 }
 
@@ -1620,8 +466,8 @@ class SpeedReader {
 document.addEventListener('DOMContentLoaded', () => {
     const app = new SpeedReader();
     
-    // Load saved position if exists
-    app.loadPosition();
+    // Make app globally accessible for debugging
+    window.speedReaderApp = app;
     
     // Register service worker for offline support
     if ('serviceWorker' in navigator) {
