@@ -6,18 +6,36 @@ A web-based speed reading application using the RSVP (Rapid Serial Visual Presen
 
 ## Features
 
+### Core Reading Experience
 - **RSVP Reading**: Display one word at a time at controlled speeds (100-1000 WPM)
+- **Reading Modes**: Manual speed control or progressive practice mode with automatic ramping
+- **Center Highlighting**: Optional highlighting of center character for improved focus
+- **Punctuation Pausing**: Configurable pauses on punctuation marks for better comprehension
+
+### Content Sources
 - **Multiple Input Sources**: Paste text, upload PDFs, or choose from popular classics
-- **Reading Modes**: Manual speed control or progressive practice mode
-- **Keyboard Shortcuts**: Full keyboard control for seamless reading
-- **Themes**: Multiple visual themes plus custom color customization
-- **Typography**: 18 font options optimized for reading
-- **Project Gutenberg Library**: Access to popular classic books
-- **Progress Tracking**: Visual progress bar and word count
-- **Sidebar Navigation**: Jump to specific parts of the text  
-- **Analytics**: Privacy-friendly usage tracking with Google Analytics 4
-- **Session Persistence**: Resume reading where you left off
+- **Project Gutenberg Library**: Access to popular classic books with search and filtering
+- **PDF Processing**: Client-side PDF text extraction with page-by-page loading
+- **Smart Text Cleaning**: Automatic removal of Project Gutenberg headers/footers
+
+### User Interface
+- **Intuitive Controls**: Font size, reading options, and quick actions directly in the reader interface
+- **Keyboard Shortcuts**: Full keyboard control for seamless reading experience
+- **Responsive Design**: Optimized for desktop, tablet, and mobile devices
+- **Sidebar Navigation**: Full text view with clickable words to jump to any position
+- **Progress Tracking**: Visual progress bar, word count, and time remaining display
+
+### Customization
+- **Themes**: 6 built-in themes (Light, Dark, Sepia, Ocean, Forest, High Contrast)
+- **Custom Themes**: Create and save unlimited custom color schemes
+- **Typography**: 18+ font options optimized for reading comfort
+- **Immediate Feedback**: Settings apply instantly for immediate visual preview
+
+### Technical Features
+- **Session Persistence**: Resume reading where you left off across browser sessions
 - **Offline Support**: PWA with service worker for offline use
+- **Privacy-Friendly Analytics**: Optional usage tracking with full privacy controls
+- **Modular Architecture**: Clean, maintainable codebase with separated concerns
 
 ## Quick Start
 
@@ -88,9 +106,15 @@ The test suite includes:
 
 ```
 speedreader/
-├── index.html          # Main application HTML
-├── styles.css          # All application styles  
-├── app.js              # Main application logic
+├── index.html          # Main application HTML with responsive design
+├── styles.css          # Optimized CSS with theme system and Tailwind
+├── app.js              # Main orchestrator - coordinates all modules
+├── textProcessor.js    # Text loading, cleaning, and PDF processing
+├── playbackController.js # RSVP timing, speed control, and navigation
+├── uiController.js     # Display updates, progress, and UI state
+├── settingsManager.js  # Theme management and settings persistence
+├── libraryManager.js   # Project Gutenberg integration and book search
+├── storageManager.js   # Local storage operations and data persistence
 ├── analytics.js        # Privacy-friendly analytics tracking
 ├── config.js           # Analytics and app configuration
 ├── sw.js               # Service worker for PWA
@@ -100,7 +124,7 @@ speedreader/
 ├── package.json        # Dependencies and scripts
 ├── playwright.config.js # Test configuration
 └── tests/
-    └── speedreader.spec.js # Comprehensive test suite
+    └── speedreader.spec.js # Comprehensive test suite (130 tests)
 ```
 
 ### Analytics Configuration
@@ -132,21 +156,66 @@ The application includes optional privacy-friendly analytics. To configure:
    - **Text Loading**: Track preferred text input methods
    - **Privacy First**: All data anonymized and configurable
 
-### Bug Fixes Applied
+### Architecture
 
-1. **Progress Display**: Fixed word count to show 1-based indexing (1/9 words) instead of 0-based (0/9 words)
-2. **Theme Selection**: Updated tests to use theme preset buttons instead of select dropdowns
-3. **Progress Bar**: Corrected progress calculation for accurate visual representation
+#### Modular Design
+The application uses a modular architecture with clear separation of concerns:
+
+**Core Modules:**
+- **TextProcessor**: Handles text loading, cleaning, and PDF processing
+- **PlaybackController**: Manages RSVP timing, speed control, and word navigation  
+- **UIController**: Controls display updates, progress tracking, and interface state
+- **SettingsManager**: Manages themes, customization, and settings persistence
+- **LibraryManager**: Handles Project Gutenberg integration and book search
+- **StorageManager**: Manages local storage operations and data persistence
+
+**Design Principles:**
+- **Event-Driven Communication**: Modules communicate through callbacks and event handlers
+- **Loose Coupling**: Each module has well-defined interfaces and responsibilities
+- **Centralized Orchestration**: The main app.js coordinates between modules
+- **Independent Testing**: Individual modules can be tested separately
+
+#### User Interface Design
+
+**Control Layout:**
+- **Contextual Controls**: Reading controls (font size, highlighting, punctuation) are located directly in the reader interface
+- **Immediate Feedback**: Settings apply instantly to provide immediate visual preview  
+- **Streamlined Settings**: The settings dialog focuses on theming and visual customization
+- **Responsive Layout**: All controls adapt to different screen sizes using CSS Grid
+- **Intuitive Organization**: Controls are grouped near the content they affect
+
+#### Performance Features
+
+**Styling & Optimization:**
+- **Efficient CSS**: Uses Tailwind CSS for optimized styling with minimal custom CSS
+- **Theme System**: CSS custom properties enable smooth theme transitions across all elements
+- **Text Preservation**: Sidebar maintains original text formatting across browser sessions  
+- **Responsive Performance**: Optimized for fast rendering on all device sizes
+
+**Quality Assurance:**
+- **Comprehensive Testing**: 130 automated tests across 5 different browsers
+- **Cross-Browser Compatibility**: Tested on Chromium, Firefox, WebKit, and mobile browsers
+- **Reliability**: Continuous integration ensures consistent functionality
 
 ## Technologies Used
 
-- **Vanilla JavaScript**: No frameworks, pure web standards
-- **CSS Grid/Flexbox**: Modern responsive layout
-- **PDF.js**: Client-side PDF text extraction
-- **Project Gutenberg API**: Access to free classic books  
-- **Service Worker**: PWA offline functionality
-- **Playwright**: End-to-end testing framework
+### Core Technologies
+- **Vanilla JavaScript**: No frameworks, pure ES6+ web standards with modular architecture
+- **Tailwind CSS**: Utility-first CSS framework for rapid UI development
+- **CSS Grid/Flexbox**: Modern responsive layout with CSS custom properties for theming
+- **PDF.js**: Client-side PDF text extraction and processing
+- **Project Gutenberg API**: Access to free classic books via Gutendex API
+
+### Development & Testing
+- **Playwright**: Cross-browser end-to-end testing (130 tests across 5 browsers)
+- **Node.js**: Development server and build tooling
+- **Service Worker**: PWA offline functionality and caching
+
+### APIs & Services
+- **Google Analytics 4**: Optional privacy-friendly usage tracking
+- **Local Storage API**: Settings and session persistence
+- **Fetch API**: HTTP requests for book loading and search
 
 ## License
 
-MIT License - see LICENSE file for details
+MIT License
