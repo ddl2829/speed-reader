@@ -1,5 +1,7 @@
 # Speed Reader 🚀
 
+Speed Reader helps you read faster by displaying one word at a time in the center of your screen using RSVP (Rapid Serial Visual Presentation) - a technique that eliminates eye movement and subvocalization to dramatically increase reading speed. Simply paste text, upload a PDF, or choose from classic books, then watch words flash at your chosen pace from 100-1000 words per minute.
+
 A web-based speed reading application using the RSVP (Rapid Serial Visual Presentation) technique to help users improve their reading speed and comprehension.
 
 ![Speed Reader Demo](speedreader-demo.gif)
