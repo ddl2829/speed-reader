@@ -3,11 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Improve your reading speed with RSVP technique. Load text, PDFs, or choose from classic books. Practice speed reading from 100-1000 WPM.">
     <title>Speed Reader - Learn to Read Faster</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="manifest" href="manifest.json">
+    <!-- Performance: Preconnect to external domains -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Roboto:wght@400;500&family=Open+Sans:wght@400;600&family=Lato:wght@400;700&family=Montserrat:wght@400;600&family=Poppins:wght@400;600&family=Merriweather:wght@400;700&family=Playfair+Display:wght@400;700&family=Crimson+Text:wght@400;600&family=Libre+Baskerville:wght@400;700&family=Source+Code+Pro:wght@400;600&family=JetBrains+Mono:wght@400;600&family=Lexend:wght@400;600&family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
     
     <!-- Analytics Configuration -->
@@ -26,17 +29,17 @@
         </header>
 
         <!-- Main Tab Navigation -->
-        <nav class="main-tabs">
-            <button class="main-tab-btn active" data-tab="help">📖 How to Use</button>
-            <button class="main-tab-btn" data-tab="input">📝 Load Text</button>
-            <button class="main-tab-btn" data-tab="reader">🚀 Speed Reader</button>
+        <nav class="main-tabs" role="tablist" aria-label="Main application sections">
+            <button class="main-tab-btn active" data-tab="help" role="tab" aria-selected="true" aria-controls="helpPanel" id="help-tab">📖 How to Use</button>
+            <button class="main-tab-btn" data-tab="input" role="tab" aria-selected="false" aria-controls="inputPanel" id="input-tab">📝 Load Text</button>
+            <button class="main-tab-btn" data-tab="reader" role="tab" aria-selected="false" aria-controls="readerPanel" id="reader-tab">🚀 Speed Reader</button>
         </nav>
 
         <!-- Tab Content Panels -->
         <main class="tab-panels">
             
             <!-- Tab 1: Help Content -->
-            <div id="helpPanel" class="tab-panel active">
+            <div id="helpPanel" class="tab-panel active" role="tabpanel" aria-labelledby="help-tab">
                 <div class="help-content">
                     <h2>Welcome to Speed Reader!</h2>
                     <p>This app helps you practice and improve your reading speed using the <strong>RSVP (Rapid Serial Visual Presentation)</strong> technique.</p>
@@ -96,7 +99,7 @@
             </div>
 
             <!-- Tab 2: Text Input -->
-            <div id="inputPanel" class="tab-panel">
+            <div id="inputPanel" class="tab-panel" role="tabpanel" aria-labelledby="input-tab" aria-hidden="true">
                 <div class="input-content">
                     <div class="input-tabs">
                         <button class="tab-btn active" data-tab="paste">Paste Text</button>
@@ -143,7 +146,7 @@
             </div>
 
             <!-- Tab 3: Speed Reader -->
-            <div id="readerPanel" class="tab-panel">
+            <div id="readerPanel" class="tab-panel" role="tabpanel" aria-labelledby="reader-tab" aria-hidden="true">
                 <div class="reader-container">
                     <div id="wordDisplay" class="word-display">
                         <span id="currentWord">Welcome</span>

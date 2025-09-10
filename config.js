@@ -1,32 +1,49 @@
-// Configuration for Speed Reader
-// Set your Google Analytics Measurement ID here
-// You can get this from Google Analytics 4 dashboard
+/**
+ * Speed Reader Application Configuration
+ * 
+ * This file contains all configurable settings for the Speed Reader application:
+ * - Analytics and privacy settings
+ * - Feature flags and behavioral controls
+ * - Integration credentials and API keys
+ * 
+ * Setup Instructions:
+ * 1. Replace GA_MEASUREMENT_ID with your Google Analytics 4 tracking ID
+ * 2. Adjust privacy settings based on your requirements
+ * 3. Modify heartbeat and storage settings for your use case
+ */
 
-// For development/testing, set to null to disable GA
-// const GA_MEASUREMENT_ID = null;
+/* ===== ANALYTICS CONFIGURATION ===== */
 
-// For production, set your GA4 Measurement ID (format: G-XXXXXXXXXX)
-// Disable analytics during testing
+/**
+ * Google Analytics 4 Measurement ID
+ * 
+ * Set to your GA4 tracking ID (format: G-XXXXXXXXXX) for production
+ * Set to null to disable analytics completely
+ * 
+ * Automatic test detection: Analytics are disabled during automated testing
+ * to prevent test data from polluting analytics
+ */
 const GA_MEASUREMENT_ID = typeof window !== 'undefined' && window.location.hostname === 'localhost' && window.navigator.webdriver 
-    ? null // Disable during automated tests
-    : 'G-BMD4CW8NQ7'; // Replace with your actual GA4 ID
+    ? null // Disable during automated tests (Playwright, Selenium, etc.)
+    : 'G-BMD4CW8NQ7'; // Replace with your actual GA4 Measurement ID
 
-// Other analytics configuration
+/**
+ * Analytics Configuration Options
+ * Controls data collection, privacy settings, and performance parameters
+ */
 const ANALYTICS_CONFIG = {
-    // Enable local event storage for backup/debugging
-    enableLocalStorage: true,
+    // Data Storage Settings
+    enableLocalStorage: true,      // Store events in browser localStorage for backup/debugging
+    maxLocalEvents: 100,           // Maximum events to retain in localStorage (prevents bloat)
     
-    // How many events to keep in localStorage
-    maxLocalEvents: 100,
+    // Performance Settings  
+    heartbeatInterval: 5,          // Minutes between activity heartbeat events
     
-    // Heartbeat interval (minutes) 
-    heartbeatInterval: 5,
-    
-    // Privacy settings
+    // Privacy Controls (GDPR/CCPA compliant defaults)
     privacy: {
-        anonymizeIP: true,
-        allowGoogleSignals: false,
-        allowAdPersonalization: false
+        anonymizeIP: true,                    // Anonymize visitor IP addresses
+        allowGoogleSignals: false,            // Disable Google Signals (cross-device tracking)
+        allowAdPersonalization: false        // Disable ad personalization features
     }
 };
 

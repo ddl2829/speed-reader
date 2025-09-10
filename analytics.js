@@ -1,5 +1,26 @@
-// Analytics tracking for Speed Reader
+/**
+ * SpeedReaderAnalytics - Privacy-First Analytics System
+ * 
+ * Features:
+ * - Google Analytics 4 integration with privacy controls
+ * - Local storage backup for offline analysis
+ * - Session tracking with reading performance metrics
+ * - Feature usage monitoring for product insights
+ * - Error tracking for debugging and quality assurance
+ * - Configurable privacy settings and data retention
+ * 
+ * Privacy Design:
+ * - All tracking is optional and configurable
+ * - Local storage used as primary data source
+ * - Google Analytics only loads if explicitly configured
+ * - IP anonymization and ad personalization controls
+ * - No personal information collected or stored
+ */
 class SpeedReaderAnalytics {
+    /**
+     * Initialize analytics system with privacy-first defaults
+     * Sets up session tracking, loads stored statistics, and configures GA4 if enabled
+     */
     constructor() {
         this.sessionStartTime = Date.now();
         this.readingStats = {
@@ -32,6 +53,12 @@ class SpeedReaderAnalytics {
         this.setupUnloadTracking();
     }
 
+    /* ===== GOOGLE ANALYTICS INTEGRATION ===== */
+
+    /**
+     * Initialize Google Analytics 4 with privacy-friendly configuration
+     * Only loads GA if GA_MEASUREMENT_ID is configured, otherwise uses console logging
+     */
     initializeGA() {
         // Check if GA_MEASUREMENT_ID is defined (you'll need to set this)
         if (typeof GA_MEASUREMENT_ID !== 'undefined' && GA_MEASUREMENT_ID) {
@@ -61,7 +88,13 @@ class SpeedReaderAnalytics {
         }
     }
 
-    // Track custom events
+    /* ===== EVENT TRACKING CORE ===== */
+
+    /**
+     * Core event tracking method - handles all analytics events
+     * @param {string} eventName - The name of the event to track
+     * @param {Object} parameters - Additional event parameters and metadata
+     */
     trackEvent(eventName, parameters = {}) {
         const eventData = {
             event_name: eventName,
@@ -99,6 +132,12 @@ class SpeedReaderAnalytics {
         localStorage.setItem('speedreader_analytics_events', JSON.stringify(events));
     }
 
+    /* ===== DATA PERSISTENCE ===== */
+
+    /**
+     * Load previously stored analytics statistics from localStorage
+     * Merges stored data with current session defaults
+     */
     loadStoredStats() {
         const stored = localStorage.getItem('speedreader_analytics_stats');
         if (stored) {
@@ -110,7 +149,12 @@ class SpeedReaderAnalytics {
         localStorage.setItem('speedreader_analytics_stats', JSON.stringify(this.readingStats));
     }
 
-    // Session tracking
+    /* ===== SESSION TRACKING ===== */
+
+    /**
+     * Track the start of a new user session
+     * Records session count and identifies returning vs new users
+     */
     trackSessionStart() {
         this.readingStats.sessionsCount++;
         this.trackEvent('session_start', {
@@ -133,7 +177,13 @@ class SpeedReaderAnalytics {
         });
     }
 
-    // Text loading method tracking
+    /* ===== READING PERFORMANCE TRACKING ===== */
+
+    /**
+     * Track how users load text into the application
+     * @param {string} method - The method used (paste, upload, library)
+     * @param {Object} metadata - Additional data about the loaded text
+     */
     trackTextLoad(method, metadata = {}) {
         this.currentSession.textLoadMethod = method;
         

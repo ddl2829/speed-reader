@@ -1,4 +1,24 @@
+/**
+ * SpeedReader - RSVP Speed Reading Application
+ * 
+ * Main application class that handles:
+ * - RSVP text display and timing
+ * - User interface controls and settings
+ * - PDF processing and library management
+ * - Theme customization and persistence
+ * - Analytics integration
+ * 
+ * Architecture:
+ * - Single-class design with logical method grouping
+ * - Event-driven UI updates
+ * - Local storage for settings persistence
+ * - Progressive Web App capabilities
+ */
 class SpeedReader {
+    /**
+     * Initialize the SpeedReader application with default settings
+     * Sets up core properties, loads user preferences, and initializes UI
+     */
     constructor() {
         this.words = [];
         this.currentIndex = 0;
@@ -35,6 +55,12 @@ class SpeedReader {
         this.analytics = window.speedReaderAnalytics;
     }
 
+    /* ===== INITIALIZATION METHODS ===== */
+
+    /**
+     * Initialize DOM element references for efficient access
+     * Caches frequently used elements to avoid repeated queries
+     */
     initializeElements() {
         // Display elements
         this.wordDisplay = document.getElementById('currentWord');
@@ -402,6 +428,13 @@ class SpeedReader {
         });
     }
 
+    /* ===== TEXT PROCESSING ===== */
+
+    /**
+     * Load and prepare text for RSVP display
+     * @param {string} text - The text to be displayed
+     * @param {Object} metadata - Optional metadata about the text source
+     */
     loadText(text, metadata = {}) {
         // Store original text for sidebar display
         this.originalText = text;
@@ -474,6 +507,12 @@ class SpeedReader {
         }
     }
 
+    /* ===== PLAYBACK CONTROLS ===== */
+
+    /**
+     * Start RSVP text playback at current speed
+     * Handles both manual speed and practice mode with ramping
+     */
     play() {
         if (this.words.length === 0) return;
         
@@ -645,6 +684,12 @@ class SpeedReader {
         }
     }
 
+    /* ===== DISPLAY AND UI UPDATES ===== */
+
+    /**
+     * Display a word in the RSVP viewer with visual enhancements
+     * @param {string} word - The word to display
+     */
     displayWord(word) {
         if (this.settings.highlightCenter && word.length > 1) {
             const centerIndex = Math.floor(word.length / 2);
@@ -767,6 +812,12 @@ class SpeedReader {
         }
     }
 
+    /* ===== NAVIGATION AND TABS ===== */
+
+    /**
+     * Handle sub-tab switching within panels (e.g., paste/upload/library tabs)
+     * @param {string} tabName - The name of the tab to switch to
+     */
     switchTab(tabName) {
         // Update tab buttons
         document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -816,6 +867,12 @@ class SpeedReader {
         this.displayBooks(this.books);
     }
 
+    /* ===== LIBRARY MANAGEMENT ===== */
+
+    /**
+     * Fetch and display popular books from Project Gutenberg
+     * Uses curated list for quick loading, falls back to API search
+     */
     getPopularBooks() {
         return [
             {
@@ -1099,6 +1156,12 @@ class SpeedReader {
         }
     }
 
+    /* ===== THEME AND SETTINGS MANAGEMENT ===== */
+
+    /**
+     * Initialize color picker controls for custom theme creation
+     * Sets up event listeners and synchronizes UI with current colors
+     */
     initializeColorPickers() {
         // Background color
         const bgPicker = document.getElementById('bgColorPicker');
@@ -1535,6 +1598,11 @@ class SpeedReader {
         this.saveSettings();
     }
 
+    /* ===== DATA PERSISTENCE ===== */
+
+    /**
+     * Save current settings to localStorage for persistence across sessions
+     */
     saveSettings() {
         localStorage.setItem('speedReaderSettings', JSON.stringify(this.settings));
     }

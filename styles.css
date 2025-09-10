@@ -79,64 +79,18 @@ body {
     flex-direction: column;
 }
 
-/* Help Section */
-.help-section {
-    background: var(--sidebar-bg);
-    border-bottom: 1px solid var(--border-color);
-    transition: all 0.3s ease;
-}
+/* ===== LAYOUT COMPONENTS ===== */
 
-.help-toggle {
-    width: 100%;
-    padding: 0.75rem 1.5rem;
-    background: transparent;
-    border: none;
+/* Application Container */
+.app-container {
+    min-height: 100vh;
     display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    cursor: pointer;
-    color: var(--text-color);
-    font-size: 0.95rem;
-    transition: background 0.2s;
+    flex-direction: column;
 }
 
-.help-toggle:hover {
-    background: var(--bg-color);
-}
+/* ===== HELP CONTENT ===== */
 
-.help-toggle-icon {
-    font-size: 1.1rem;
-}
-
-.help-toggle-arrow {
-    margin-left: auto;
-    transition: transform 0.3s;
-}
-
-.help-section.expanded .help-toggle-arrow {
-    transform: rotate(180deg);
-}
-
-
-
-.help-inner {
-    padding: 1.5rem;
-    border-top: 1px solid var(--border-color);
-}
-
-.help-inner h2 {
-    margin-bottom: 0.75rem;
-    font-size: 1.3rem;
-    color: var(--primary-color);
-}
-
-.help-inner h3 {
-    margin-top: 1rem;
-    margin-bottom: 0.5rem;
-    font-size: 1.1rem;
-}
-
+/* Help section layout and typography */
 .help-columns {
     display: grid;
     grid-template-columns: 1fr 1fr;
