@@ -5,6 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Improve your reading speed with RSVP technique. Load text, PDFs, or choose from classic books. Practice speed reading from 100-1000 WPM.">
     <title>Speed Reader - Learn to Read Faster</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            DEFAULT: '#2563eb',
+                            hover: '#1d4ed8'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
     <link rel="stylesheet" href="styles.css">
     <link rel="manifest" href="manifest.json">
     <!-- Performance: Preconnect to external domains -->
@@ -19,28 +34,28 @@
     <script src="analytics.js"></script>
 </head>
 <body>
-    <div class="app-container">
+    <div class="min-h-screen flex flex-col bg-[var(--bg-color)] text-[var(--text-color)] transition-colors duration-300">
         <!-- Header -->
-        <header class="app-header">
-            <h1>Speed Reader</h1>
-            <div class="header-controls">
-                <button id="settingsBtn" class="btn-icon" title="Settings">⚙️</button>
+        <header class="flex justify-between items-center p-6 border-b border-[var(--border-color)]">
+            <h1 class="text-2xl font-bold text-primary">Speed Reader</h1>
+            <div>
+                <button id="settingsBtn" class="p-2 rounded-lg hover:bg-gray-100 hover:bg-opacity-10 transition-colors text-2xl" title="Settings">⚙️</button>
             </div>
         </header>
 
         <!-- Main Tab Navigation -->
-        <nav class="main-tabs" role="tablist" aria-label="Main application sections">
-            <button class="main-tab-btn active" data-tab="help" role="tab" aria-selected="true" aria-controls="helpPanel" id="help-tab">📖 How to Use</button>
-            <button class="main-tab-btn" data-tab="input" role="tab" aria-selected="false" aria-controls="inputPanel" id="input-tab">📝 Load Text</button>
-            <button class="main-tab-btn" data-tab="reader" role="tab" aria-selected="false" aria-controls="readerPanel" id="reader-tab">🚀 Speed Reader</button>
+        <nav class="flex bg-gray-50 bg-opacity-50" role="tablist" aria-label="Main application sections" data-tab-group="main">
+            <button class="flex-1 px-4 py-3 text-sm font-medium border-b-2 border-primary text-primary bg-white bg-opacity-50 transition-all duration-200" data-tab="help" role="tab" aria-selected="true" aria-controls="helpPanel" id="help-tab">📖 How to Use</button>
+            <button class="flex-1 px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-600 hover:text-gray-900 hover:bg-white hover:bg-opacity-30 transition-all duration-200" data-tab="input" role="tab" aria-selected="false" aria-controls="inputPanel" id="input-tab">📝 Load Text</button>
+            <button class="flex-1 px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-600 hover:text-gray-900 hover:bg-white hover:bg-opacity-30 transition-all duration-200" data-tab="reader" role="tab" aria-selected="false" aria-controls="readerPanel" id="reader-tab">🚀 Speed Reader</button>
         </nav>
 
         <!-- Tab Content Panels -->
-        <main class="tab-panels">
+        <main class="tab-panels flex-1 overflow-auto">
             
             <!-- Tab 1: Help Content -->
             <div id="helpPanel" class="tab-panel active" role="tabpanel" aria-labelledby="help-tab">
-                <div class="help-content">
+                <div class="max-w-4xl mx-auto p-6">
                     <h2>Welcome to Speed Reader!</h2>
                     <p>This app helps you practice and improve your reading speed using the <strong>RSVP (Rapid Serial Visual Presentation)</strong> technique.</p>
                     
@@ -101,10 +116,10 @@
             <!-- Tab 2: Text Input -->
             <div id="inputPanel" class="tab-panel" role="tabpanel" aria-labelledby="input-tab" aria-hidden="true">
                 <div class="input-content">
-                    <div class="input-tabs">
-                        <button class="tab-btn active" data-tab="paste">Paste Text</button>
-                        <button class="tab-btn" data-tab="upload">Upload PDF</button>
-                        <button class="tab-btn" data-tab="library">Library</button>
+                    <div class="flex bg-gray-100 rounded-lg p-1 mb-6" role="tablist" aria-label="Text input methods" data-tab-group="input">
+                        <button class="flex-1 px-4 py-2 text-sm font-medium rounded-md bg-white text-primary shadow-sm transition-all duration-200" data-tab="paste" role="tab" aria-selected="true" aria-controls="pasteTab">Paste Text</button>
+                        <button class="flex-1 px-4 py-2 text-sm font-medium rounded-md text-gray-600 hover:text-gray-900 transition-all duration-200" data-tab="upload" role="tab" aria-selected="false" aria-controls="uploadTab">Upload PDF</button>
+                        <button class="flex-1 px-4 py-2 text-sm font-medium rounded-md text-gray-600 hover:text-gray-900 transition-all duration-200" data-tab="library" role="tab" aria-selected="false" aria-controls="libraryTab">Library</button>
                     </div>
 
                     <div id="pasteTab" class="tab-content active">

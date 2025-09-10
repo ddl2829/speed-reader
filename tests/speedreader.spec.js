@@ -7,14 +7,14 @@ test.describe('Speed Reader Application', () => {
     await page.goto('/');
     
     // Wait for the app to initialize
-    await page.waitForSelector('.main-tabs');
+    await page.waitForSelector('[role="tablist"]');
   });
 
   test.describe('Tab Navigation', () => {
     
     test('should show help tab by default', async ({ page }) => {
       // Verify help tab is active by default
-      await expect(page.locator('.main-tab-btn[data-tab="help"]')).toHaveClass(/active/);
+      await expect(page.locator('[data-tab-group="main"] [role="tab"][data-tab="help"]')).toHaveAttribute('aria-selected', 'true');
       await expect(page.locator('#helpPanel')).toHaveClass(/active/);
       
       // Verify help content is visible
@@ -24,19 +24,19 @@ test.describe('Speed Reader Application', () => {
 
     test('should switch between tabs correctly', async ({ page }) => {
       // Switch to Load Text tab
-      await page.click('.main-tab-btn[data-tab="input"]');
-      await expect(page.locator('.main-tab-btn[data-tab="input"]')).toHaveClass(/active/);
+      await page.click('[data-tab-group="main"] [role="tab"][data-tab="input"]');
+      await expect(page.locator('[data-tab-group="main"] [role="tab"][data-tab="input"]')).toHaveAttribute('aria-selected', 'true');
       await expect(page.locator('#inputPanel')).toHaveClass(/active/);
       await expect(page.locator('#helpPanel')).not.toHaveClass(/active/);
       
       // Switch to Speed Reader tab
-      await page.click('.main-tab-btn[data-tab="reader"]');
-      await expect(page.locator('.main-tab-btn[data-tab="reader"]')).toHaveClass(/active/);
+      await page.click('[data-tab-group="main"] [role="tab"][data-tab="reader"]');
+      await expect(page.locator('[data-tab-group="main"] [role="tab"][data-tab="reader"]')).toHaveAttribute('aria-selected', 'true');
       await expect(page.locator('#readerPanel')).toHaveClass(/active/);
       await expect(page.locator('#inputPanel')).not.toHaveClass(/active/);
       
       // Switch back to help
-      await page.click('.main-tab-btn[data-tab="help"]');
+      await page.click('[data-tab-group="main"] [role="tab"][data-tab="help"]');
       await expect(page.locator('#helpPanel')).toHaveClass(/active/);
     });
   });
@@ -47,7 +47,7 @@ test.describe('Speed Reader Application', () => {
       const testText = 'This is a test sentence for speed reading practice.';
       
       // Navigate to input tab
-      await page.click('.main-tab-btn[data-tab="input"]');
+      await page.click('[data-tab-group="main"] [role="tab"][data-tab="input"]');
       
       // Ensure paste tab is active
       await expect(page.locator('#pasteTab')).toHaveClass(/active/);
@@ -57,7 +57,7 @@ test.describe('Speed Reader Application', () => {
       await page.click('#loadTextBtn');
       
       // Should automatically switch to reader tab
-      await expect(page.locator('.main-tab-btn[data-tab="reader"]')).toHaveClass(/active/);
+      await expect(page.locator('[data-tab-group="main"] [role="tab"][data-tab="reader"]')).toHaveAttribute('aria-selected', 'true');
       
       // Verify first word is displayed
       await expect(page.locator('#currentWord')).toContainText('This');
@@ -67,21 +67,21 @@ test.describe('Speed Reader Application', () => {
     });
     
     test('should switch between input tabs', async ({ page }) => {
-      await page.click('.main-tab-btn[data-tab="input"]');
+      await page.click('[data-tab-group="main"] [role="tab"][data-tab="input"]');
       
       // Test paste tab (should be active by default)
-      await expect(page.locator('.tab-btn[data-tab="paste"]')).toHaveClass(/active/);
+      await expect(page.locator('[data-tab-group="input"] [role="tab"][data-tab="paste"]')).toHaveAttribute('aria-selected', 'true');
       await expect(page.locator('#pasteTab')).toHaveClass(/active/);
       
       // Switch to upload tab
-      await page.click('.tab-btn[data-tab="upload"]');
-      await expect(page.locator('.tab-btn[data-tab="upload"]')).toHaveClass(/active/);
+      await page.click('[data-tab-group="input"] [role="tab"][data-tab="upload"]');
+      await expect(page.locator('[data-tab-group="input"] [role="tab"][data-tab="upload"]')).toHaveAttribute('aria-selected', 'true');
       await expect(page.locator('#uploadTab')).toHaveClass(/active/);
       await expect(page.locator('#pasteTab')).not.toHaveClass(/active/);
       
       // Switch to library tab
-      await page.click('.tab-btn[data-tab="library"]');
-      await expect(page.locator('.tab-btn[data-tab="library"]')).toHaveClass(/active/);
+      await page.click('[data-tab-group="input"] [role="tab"][data-tab="library"]');
+      await expect(page.locator('[data-tab-group="input"] [role="tab"][data-tab="library"]')).toHaveAttribute('aria-selected', 'true');
       await expect(page.locator('#libraryTab')).toHaveClass(/active/);
       await expect(page.locator('#uploadTab')).not.toHaveClass(/active/);
     });
@@ -92,7 +92,7 @@ test.describe('Speed Reader Application', () => {
     test.beforeEach(async ({ page }) => {
       // Load some test text first
       const testText = 'The quick brown fox jumps over the lazy dog repeatedly.';
-      await page.click('.main-tab-btn[data-tab="input"]');
+      await page.click('[data-tab-group="main"] [role="tab"][data-tab="input"]');
       await page.fill('#textInput', testText);
       await page.click('#loadTextBtn');
       
@@ -169,7 +169,7 @@ test.describe('Speed Reader Application', () => {
     test.beforeEach(async ({ page }) => {
       // Load test text
       const testText = 'One two three four five six seven eight nine ten.';
-      await page.click('.main-tab-btn[data-tab="input"]');
+      await page.click('[data-tab-group="main"] [role="tab"][data-tab="input"]');
       await page.fill('#textInput', testText);
       await page.click('#loadTextBtn');
     });
@@ -225,8 +225,8 @@ test.describe('Speed Reader Application', () => {
   test.describe('Library Functionality', () => {
     
     test('should load popular books by default', async ({ page }) => {
-      await page.click('.main-tab-btn[data-tab="input"]');
-      await page.click('.tab-btn[data-tab="library"]');
+      await page.click('[data-tab-group="main"] [role="tab"][data-tab="input"]');
+      await page.click('[data-tab-group="input"] [role="tab"][data-tab="library"]');
       
       // Should see popular books loaded
       await expect(page.locator('.book-list .book-item')).toHaveCount(12);
@@ -238,8 +238,8 @@ test.describe('Speed Reader Application', () => {
     });
 
     test('should load book when clicked', async ({ page }) => {
-      await page.click('.main-tab-btn[data-tab="input"]');
-      await page.click('.tab-btn[data-tab="library"]');
+      await page.click('[data-tab-group="main"] [role="tab"][data-tab="input"]');
+      await page.click('[data-tab-group="input"] [role="tab"][data-tab="library"]');
       
       // Wait for books to load
       await page.waitForSelector('.book-item');
@@ -248,15 +248,15 @@ test.describe('Speed Reader Application', () => {
       await page.click('.book-item:first-child');
       
       // Should switch to reader tab and load the book
-      await expect(page.locator('.main-tab-btn[data-tab="reader"]')).toHaveClass(/active/);
+      await expect(page.locator('[data-tab-group="main"] [role="tab"][data-tab="reader"]')).toHaveAttribute('aria-selected', 'true');
       
       // Should show loading or first word
       await page.waitForSelector('#currentWord:not(:empty)', { timeout: 10000 });
     });
 
     test('should filter books by category', async ({ page }) => {
-      await page.click('.main-tab-btn[data-tab="input"]');
-      await page.click('.tab-btn[data-tab="library"]');
+      await page.click('[data-tab-group="main"] [role="tab"][data-tab="input"]');
+      await page.click('[data-tab-group="input"] [role="tab"][data-tab="library"]');
       
       // All books should be visible initially
       await expect(page.locator('.book-item')).toHaveCount(12);
@@ -289,7 +289,7 @@ test.describe('Speed Reader Application', () => {
     test('should change font size', async ({ page }) => {
       // Load some text first
       const testText = 'Test text for font size.';
-      await page.click('.main-tab-btn[data-tab="input"]');
+      await page.click('[data-tab-group="main"] [role="tab"][data-tab="input"]');
       await page.fill('#textInput', testText);
       await page.click('#loadTextBtn');
       
@@ -338,7 +338,7 @@ test.describe('Speed Reader Application', () => {
     test.beforeEach(async ({ page }) => {
       // Load test text
       const testText = 'First sentence. Second sentence. Third sentence for testing sidebar functionality.';
-      await page.click('.main-tab-btn[data-tab="input"]');
+      await page.click('[data-tab-group="main"] [role="tab"][data-tab="input"]');
       await page.fill('#textInput', testText);
       await page.click('#loadTextBtn');
     });
@@ -371,7 +371,7 @@ test.describe('Speed Reader Application', () => {
     
     test('should show correct progress information', async ({ page }) => {
       const testText = 'One two three four five';
-      await page.click('.main-tab-btn[data-tab="input"]');
+      await page.click('[data-tab-group="main"] [role="tab"][data-tab="input"]');
       await page.fill('#textInput', testText);
       await page.click('#loadTextBtn');
       
@@ -393,17 +393,17 @@ test.describe('Speed Reader Application', () => {
   test.describe('Error Handling and Edge Cases', () => {
     
     test('should handle empty text input', async ({ page }) => {
-      await page.click('.main-tab-btn[data-tab="input"]');
+      await page.click('[data-tab-group="main"] [role="tab"][data-tab="input"]');
       
       // Try to load empty text
       await page.click('#loadTextBtn');
       
       // Should not switch tabs or break
-      await expect(page.locator('.main-tab-btn[data-tab="input"]')).toHaveClass(/active/);
+      await expect(page.locator('[data-tab-group="main"] [role="tab"][data-tab="input"]')).toHaveAttribute('aria-selected', 'true');
     });
 
     test('should handle very short text', async ({ page }) => {
-      await page.click('.main-tab-btn[data-tab="input"]');
+      await page.click('[data-tab-group="main"] [role="tab"][data-tab="input"]');
       await page.fill('#textInput', 'Hi');
       await page.click('#loadTextBtn');
       
@@ -414,7 +414,7 @@ test.describe('Speed Reader Application', () => {
 
     test('should handle speed limits', async ({ page }) => {
       const testText = 'Test text for speed limits.';
-      await page.click('.main-tab-btn[data-tab="input"]');
+      await page.click('[data-tab-group="main"] [role="tab"][data-tab="input"]');
       await page.fill('#textInput', testText);
       await page.click('#loadTextBtn');
       
@@ -437,14 +437,14 @@ test.describe('Speed Reader Application', () => {
       await page.setViewportSize({ width: 375, height: 667 });
       
       // Basic functionality should still work
-      await page.click('.main-tab-btn[data-tab="input"]');
+      await page.click('[data-tab-group="main"] [role="tab"][data-tab="input"]');
       await page.fill('#textInput', 'Mobile test text');
       await page.click('#loadTextBtn');
       
       await expect(page.locator('#currentWord')).toContainText('Mobile');
       
       // Tabs should still be functional
-      await page.click('.main-tab-btn[data-tab="help"]');
+      await page.click('[data-tab-group="main"] [role="tab"][data-tab="help"]');
       await expect(page.locator('#helpPanel')).toHaveClass(/active/);
     });
   });

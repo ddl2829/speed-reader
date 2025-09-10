@@ -111,10 +111,10 @@ class SpeedReader {
 
     attachEventListeners() {
         // Main tabs
-        document.querySelectorAll('.main-tab-btn').forEach(btn => {
+        document.querySelectorAll('[data-tab-group="main"] [role="tab"]').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const tabName = e.target.dataset.tab;
-                const currentTab = document.querySelector('.main-tab-btn.active')?.dataset.tab || 'unknown';
+                const currentTab = document.querySelector('[data-tab-group="main"] [role="tab"][aria-selected="true"]')?.dataset.tab || 'unknown';
                 
                 
                 this.switchMainTab(tabName);
@@ -308,8 +308,8 @@ class SpeedReader {
             });
         }
         
-        // Tabs
-        document.querySelectorAll('.tab-btn').forEach(btn => {
+        // Secondary tabs (input methods)
+        document.querySelectorAll('[data-tab-group="input"] [role="tab"]').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const tabName = e.target.dataset.tab;
                 this.switchTab(tabName);
@@ -738,9 +738,14 @@ class SpeedReader {
      * @param {string} tabName - The name of the tab to switch to
      */
     switchTab(tabName) {
-        // Update tab buttons
-        document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.tab === tabName);
+        // Update secondary tab buttons
+        document.querySelectorAll('[data-tab-group="input"] [role="tab"]').forEach(btn => {
+            const isActive = btn.dataset.tab === tabName;
+            btn.classList.toggle('bg-white', isActive);
+            btn.classList.toggle('text-primary', isActive);
+            btn.classList.toggle('shadow-sm', isActive);
+            btn.classList.toggle('text-gray-600', !isActive);
+            btn.setAttribute('aria-selected', isActive);
         });
         
         // Update tab content
@@ -751,9 +756,16 @@ class SpeedReader {
     }
 
     switchMainTab(tabName) {
-        // Update main tab buttons
-        document.querySelectorAll('.main-tab-btn').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.tab === tabName);
+        // Update main tab buttons only
+        document.querySelectorAll('[data-tab-group="main"] [role="tab"]').forEach(btn => {
+            const isActive = btn.dataset.tab === tabName;
+            btn.classList.toggle('border-primary', isActive);
+            btn.classList.toggle('text-primary', isActive);
+            btn.classList.toggle('bg-white', isActive);
+            btn.classList.toggle('bg-opacity-50', isActive);
+            btn.classList.toggle('border-transparent', !isActive);
+            btn.classList.toggle('text-gray-600', !isActive);
+            btn.setAttribute('aria-selected', isActive);
         });
         
         // Update main tab panels
@@ -764,9 +776,12 @@ class SpeedReader {
         
         // Special handling for certain tabs
         if (tabName === 'input') {
+            // Initialize secondary tab state - ensure paste tab is active by default
+            this.switchTab('paste');
+            
             // Load library when switching to input tab if library hasn't been loaded
             let libraryLoaded = false;
-            const libraryTabBtn = document.querySelector('.tab-btn[data-tab="library"]');
+            const libraryTabBtn = document.querySelector('[data-tab-group="input"] [role="tab"][data-tab="library"]');
             if (libraryTabBtn && !libraryLoaded) {
                 // Only load if library tab is active
                 if (document.getElementById('libraryTab').classList.contains('active')) {
@@ -1558,6 +1573,7 @@ class SpeedReader {
         if (this.words.length > 0) {
             const position = {
                 text: this.words.join(' '),
+                originalText: this.originalText || this.words.join(' '), // Preserve original formatting
                 index: this.currentIndex,
                 timestamp: Date.now()
             };
@@ -1571,7 +1587,9 @@ class SpeedReader {
             const position = JSON.parse(saved);
             // Only restore if less than 24 hours old
             if (Date.now() - position.timestamp < 86400000) {
-                this.loadText(position.text);
+                // Use originalText if available to preserve formatting
+                const textToLoad = position.originalText || position.text;
+                this.loadText(textToLoad);
                 this.currentIndex = position.index;
                 this.updateDisplay();
                 this.updateProgress();
