@@ -1,6 +1,8 @@
-# Speed Reader
+# Speed Reader 🚀
 
 A web-based speed reading application using the RSVP (Rapid Serial Visual Presentation) technique to help users improve their reading speed and comprehension.
+
+![Speed Reader Demo](speedreader-demo.gif)
 
 ## Features
 
@@ -12,7 +14,9 @@ A web-based speed reading application using the RSVP (Rapid Serial Visual Presen
 - **Typography**: 18 font options optimized for reading
 - **Project Gutenberg Library**: Access to popular classic books
 - **Progress Tracking**: Visual progress bar and word count
-- **Sidebar Navigation**: Jump to specific parts of the text
+- **Sidebar Navigation**: Jump to specific parts of the text  
+- **Analytics**: Privacy-friendly usage tracking with Google Analytics 4
+- **Session Persistence**: Resume reading where you left off
 - **Offline Support**: PWA with service worker for offline use
 
 ## Quick Start
@@ -87,14 +91,46 @@ speedreader/
 ├── index.html          # Main application HTML
 ├── styles.css          # All application styles  
 ├── app.js              # Main application logic
+├── analytics.js        # Privacy-friendly analytics tracking
+├── config.js           # Analytics and app configuration
 ├── sw.js               # Service worker for PWA
 ├── manifest.json       # PWA manifest
 ├── server.js           # Development server
+├── demo.js             # Demo recording script
 ├── package.json        # Dependencies and scripts
 ├── playwright.config.js # Test configuration
 └── tests/
     └── speedreader.spec.js # Comprehensive test suite
 ```
+
+### Analytics Configuration
+
+The application includes optional privacy-friendly analytics. To configure:
+
+1. **Edit `config.js`**:
+   ```javascript
+   // Set your Google Analytics 4 measurement ID
+   const GA_MEASUREMENT_ID = 'G-YOUR-GA4-ID';
+   
+   // Configure privacy settings
+   const ANALYTICS_CONFIG = {
+       enableLocalStorage: true,  // Backup events locally
+       maxLocalEvents: 100,       // Max events to store
+       heartbeatInterval: 5,      // Minutes between heartbeats
+       privacy: {
+           anonymizeIP: true,              // Anonymize visitor IPs
+           allowGoogleSignals: false,      // Disable Google Signals
+           allowAdPersonalization: false  // Disable ad personalization
+       }
+   };
+   ```
+
+2. **Analytics Features**:
+   - **Session Tracking**: Reading duration and engagement metrics
+   - **Feature Usage**: Track which features are used most
+   - **Reading Performance**: WPM improvements and reading patterns
+   - **Text Loading**: Track preferred text input methods
+   - **Privacy First**: All data anonymized and configurable
 
 ### Bug Fixes Applied
 

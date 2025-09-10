@@ -30,6 +30,9 @@ class SpeedReader {
         this.loadSettings();
         this.attachEventListeners();
         this.initializePDFJS();
+        
+        // Initialize analytics reference
+        this.analytics = window.speedReaderAnalytics;
     }
 
     initializeElements() {
@@ -85,6 +88,13 @@ class SpeedReader {
         document.querySelectorAll('.main-tab-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const tabName = e.target.dataset.tab;
+                const currentTab = document.querySelector('.main-tab-btn.active')?.dataset.tab || 'unknown';
+                
+                // Track tab switching
+                if (this.analytics && currentTab !== tabName) {
+                    this.analytics.trackTabSwitch(currentTab, tabName);
+                }
+                
                 this.switchMainTab(tabName);
             });
         });
@@ -97,8 +107,16 @@ class SpeedReader {
         
         // Speed control
         this.speedSlider.addEventListener('input', (e) => {
-            this.currentWPM = parseInt(e.target.value);
+            const oldWPM = this.currentWPM;
+            const newWPM = parseInt(e.target.value);
+            this.currentWPM = newWPM;
             this.speedValue.textContent = this.currentWPM;
+            
+            // Track WPM change
+            if (this.analytics && oldWPM !== newWPM) {
+                this.analytics.trackWPMChange(oldWPM, newWPM, 'manual_slider');
+            }
+            
             if (this.isPlaying && this.mode === 'manual') {
                 this.stop();
                 this.play();
@@ -108,7 +126,17 @@ class SpeedReader {
         // Mode toggle
         document.querySelectorAll('input[name="mode"]').forEach(radio => {
             radio.addEventListener('change', (e) => {
+                const oldMode = this.mode;
                 this.mode = e.target.value;
+                
+                // Track mode change
+                if (this.analytics && oldMode !== this.mode) {
+                    this.analytics.trackFeatureUse('reading_mode_change', {
+                        old_mode: oldMode,
+                        new_mode: this.mode
+                    });
+                }
+                
                 this.practiceOptions.classList.toggle('hidden', this.mode !== 'practice');
                 if (this.mode === 'practice') {
                     this.practiceStartSpeed = parseInt(this.startSpeedInput.value);
@@ -119,18 +147,34 @@ class SpeedReader {
         
         // Practice mode settings
         this.startSpeedInput.addEventListener('change', (e) => {
+            const oldValue = this.practiceStartSpeed;
             this.practiceStartSpeed = parseInt(e.target.value);
+            
+            // Track settings change
+            if (this.analytics) {
+                this.analytics.trackSettingsChange('practiceStartSpeed', oldValue, this.practiceStartSpeed);
+            }
         });
         
         this.rampRateInput.addEventListener('change', (e) => {
+            const oldValue = this.practiceRampRate;
             this.practiceRampRate = parseInt(e.target.value);
+            
+            // Track settings change
+            if (this.analytics) {
+                this.analytics.trackSettingsChange('practiceRampRate', oldValue, this.practiceRampRate);
+            }
         });
         
         // Text input
         this.loadTextBtn.addEventListener('click', () => {
             const text = this.textInput.value.trim();
             if (text) {
-                this.loadText(text);
+                this.loadText(text, { 
+                    method: 'paste', 
+                    source: 'manual_paste',
+                    title: text.substring(0, 50) + '...'
+                });
                 this.saveToHistory('manual', text.substring(0, 100) + '...');
             }
         });
@@ -176,8 +220,15 @@ class SpeedReader {
         });
         
         this.fontSizeSlider.addEventListener('input', (e) => {
+            const oldValue = this.settings.fontSize;
             this.settings.fontSize = parseInt(e.target.value);
             this.fontSizeValue.textContent = this.settings.fontSize + 'px';
+            
+            // Track settings change
+            if (this.analytics) {
+                this.analytics.trackSettingsChange('fontSize', oldValue, this.settings.fontSize);
+            }
+            
             this.applySettings();
         });
         
@@ -185,7 +236,13 @@ class SpeedReader {
         document.querySelectorAll('.theme-preset').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const theme = btn.dataset.preset;
+                const oldTheme = this.settings.theme;
                 this.settings.theme = theme;
+                
+                // Track settings change
+                if (this.analytics && oldTheme !== theme) {
+                    this.analytics.trackSettingsChange('theme', oldTheme, theme);
+                }
                 
                 // Update custom colors to match the preset
                 this.updateCustomColorsFromTheme(theme);
@@ -199,7 +256,14 @@ class SpeedReader {
         document.querySelectorAll('.font-option').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const font = btn.dataset.font;
+                const oldFont = this.settings.fontFamily;
                 this.settings.fontFamily = font;
+                
+                // Track settings change
+                if (this.analytics && oldFont !== font) {
+                    this.analytics.trackSettingsChange('fontFamily', oldFont, font);
+                }
+                
                 this.applySettings();
                 this.updateSettingsUI();
             });
@@ -225,12 +289,25 @@ class SpeedReader {
         }
         
         this.highlightCenterCheck.addEventListener('change', (e) => {
+            const oldValue = this.settings.highlightCenter;
             this.settings.highlightCenter = e.target.checked;
+            
+            // Track settings change
+            if (this.analytics) {
+                this.analytics.trackSettingsChange('highlightCenter', oldValue, this.settings.highlightCenter);
+            }
+            
             this.applySettings();
         });
         
         this.pausePunctuationCheck.addEventListener('change', (e) => {
+            const oldValue = this.settings.pauseOnPunctuation;
             this.settings.pauseOnPunctuation = e.target.checked;
+            
+            // Track settings change
+            if (this.analytics) {
+                this.analytics.trackSettingsChange('pauseOnPunctuation', oldValue, this.settings.pauseOnPunctuation);
+            }
         });
         
         // Sidebar toggle button
@@ -325,7 +402,7 @@ class SpeedReader {
         });
     }
 
-    loadText(text) {
+    loadText(text, metadata = {}) {
         // Store original text for sidebar display
         this.originalText = text;
         
@@ -335,6 +412,16 @@ class SpeedReader {
         this.currentIndex = 0;
         this.updateDisplay();
         this.updateProgress();
+        
+        // Track text loading analytics
+        if (this.analytics) {
+            this.analytics.trackTextLoad(metadata.method || 'manual', {
+                wordCount: this.words.length,
+                source: metadata.source || 'manual_input',
+                title: metadata.title || null,
+                textLength: text.length
+            });
+        }
         
         // Switch to reader tab when text is loaded
         this.switchMainTab('reader');
@@ -363,7 +450,12 @@ class SpeedReader {
                 fullText += pageText + ' ';
             }
             
-            this.loadText(fullText);
+            this.loadText(fullText, { 
+                method: 'pdf_upload', 
+                source: 'pdf_file',
+                title: file.name,
+                pages: pdf.numPages
+            });
             this.uploadStatus.textContent = `Loaded ${pdf.numPages} pages`;
             this.saveToHistory('pdf', file.name);
             
@@ -391,6 +483,11 @@ class SpeedReader {
         if (this.mode === 'practice') {
             this.practiceStartTime = Date.now();
             this.currentWPM = this.practiceStartSpeed;
+        }
+        
+        // Track reading session start
+        if (this.analytics) {
+            this.analytics.trackReadingStart(this.currentWPM);
         }
         
         const showNextWord = () => {
@@ -437,6 +534,19 @@ class SpeedReader {
             clearTimeout(this.intervalId);
             this.intervalId = null;
         }
+        
+        // Track reading pause/stop
+        if (this.analytics) {
+            if (this.currentIndex >= this.words.length) {
+                // Completed reading
+                const totalTime = Date.now() - (this.analytics.readingSessionStartTime || Date.now());
+                this.analytics.trackReadingComplete(this.words.length, totalTime, this.currentWPM);
+            } else {
+                // Paused reading
+                this.analytics.trackReadingPause(this.currentIndex, this.words.length, this.currentWPM);
+            }
+        }
+        
         this.savePosition();
     }
 
@@ -473,22 +583,36 @@ class SpeedReader {
             this.wordDisplay.textContent = 'Welcome';
         }
         this.updateProgress();
+        
+        // Track feature usage
+        if (this.analytics) {
+            this.analytics.trackFeatureUse('reset', {
+                had_text: this.words.length > 0,
+                previous_position: this.currentIndex
+            });
+        }
     }
 
     increaseSpeed() {
         const newSpeed = Math.min(this.currentWPM + 25, 1000);
-        this.updateSpeed(newSpeed);
+        this.updateSpeed(newSpeed, 'keyboard');
     }
 
     decreaseSpeed() {
         const newSpeed = Math.max(this.currentWPM - 25, 100);
-        this.updateSpeed(newSpeed);
+        this.updateSpeed(newSpeed, 'keyboard');
     }
 
-    updateSpeed(newSpeed) {
+    updateSpeed(newSpeed, method = 'programmatic') {
+        const oldWPM = this.currentWPM;
         this.currentWPM = newSpeed;
         this.speedValue.textContent = this.currentWPM;
         this.speedSlider.value = this.currentWPM;
+        
+        // Track WPM change
+        if (this.analytics && oldWPM !== newSpeed) {
+            this.analytics.trackWPMChange(oldWPM, newSpeed, method);
+        }
         
         // If currently playing in manual mode, restart with new speed
         if (this.isPlaying && this.mode === 'manual') {
@@ -503,10 +627,20 @@ class SpeedReader {
             return;
         }
         
+        const wasOpen = this.textSidebar.classList.contains('open');
         this.textSidebar.classList.toggle('open');
+        const isOpen = this.textSidebar.classList.contains('open');
+        
+        // Track feature usage
+        if (this.analytics) {
+            this.analytics.trackFeatureUse('sidebar_toggle', {
+                action: isOpen ? 'open' : 'close',
+                has_text: this.words.length > 0
+            });
+        }
         
         // If opening and we have text, display it
-        if (this.textSidebar.classList.contains('open') && this.words.length > 0) {
+        if (isOpen && this.words.length > 0) {
             this.displayFullText();
         }
     }
@@ -896,9 +1030,14 @@ class SpeedReader {
                     }
                 }
                 
-                this.loadText(cleanText);
+                this.loadText(cleanText, { 
+                    method: 'project_gutenberg', 
+                    source: 'gutenberg_library',
+                    title: title,
+                    bookId: bookId
+                });
                 this.saveToHistory('gutenberg', title);
-                this.switchTab('paste'); // Switch to reading view
+                // Text will automatically switch to reader tab via loadText method
                 this.bookList.innerHTML = `<div class="loading">Loaded: ${title}</div>`;
                 setTimeout(() => this.displayBooks(this.books), 2000);
             } else {
