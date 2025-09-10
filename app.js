@@ -75,30 +75,19 @@ class SpeedReader {
         this.rampRateInput = document.getElementById('rampRate');
         
         // Library
-        this.libraryBtn = document.getElementById('libraryBtn');
         this.searchInput = document.getElementById('searchInput');
         this.categoryFilter = document.getElementById('categoryFilter');
         this.bookList = document.getElementById('bookList');
     }
 
     attachEventListeners() {
-        // Help section toggle
-        const helpToggle = document.getElementById('helpToggle');
-        const helpSection = document.getElementById('helpSection');
-        if (helpToggle && helpSection) {
-            helpToggle.addEventListener('click', () => {
-                helpSection.classList.toggle('expanded');
-                // Save preference
-                const isExpanded = helpSection.classList.contains('expanded');
-                localStorage.setItem('helpExpanded', isExpanded);
+        // Main tabs
+        document.querySelectorAll('.main-tab-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const tabName = e.target.dataset.tab;
+                this.switchMainTab(tabName);
             });
-            
-            // Load preference
-            const savedExpanded = localStorage.getItem('helpExpanded');
-            if (savedExpanded === 'true') {
-                helpSection.classList.add('expanded');
-            }
-        }
+        });
         
         // Playback controls
         this.playPauseBtn.addEventListener('click', () => this.togglePlayPause());
@@ -244,11 +233,7 @@ class SpeedReader {
             this.settings.pauseOnPunctuation = e.target.checked;
         });
         
-        // Sidebar - both library button and text button open it
-        this.libraryBtn.addEventListener('click', () => {
-            this.toggleSidebar();
-        });
-        
+        // Sidebar toggle button
         const sidebarToggleBtn = document.getElementById('sidebarToggleBtn');
         if (sidebarToggleBtn) {
             sidebarToggleBtn.addEventListener('click', () => {
@@ -313,6 +298,14 @@ class SpeedReader {
                 case 'ArrowRight':
                     this.nextWord();
                     break;
+                case 'ArrowUp':
+                    e.preventDefault();
+                    this.increaseSpeed();
+                    break;
+                case 'ArrowDown':
+                    e.preventDefault();
+                    this.decreaseSpeed();
+                    break;
                 case 'r':
                     this.reset();
                     break;
@@ -342,6 +335,9 @@ class SpeedReader {
         this.currentIndex = 0;
         this.updateDisplay();
         this.updateProgress();
+        
+        // Switch to reader tab when text is loaded
+        this.switchMainTab('reader');
         
         // Show in sidebar if open
         if (this.textSidebar.classList.contains('open')) {
@@ -477,6 +473,28 @@ class SpeedReader {
             this.wordDisplay.textContent = 'Welcome';
         }
         this.updateProgress();
+    }
+
+    increaseSpeed() {
+        const newSpeed = Math.min(this.currentWPM + 25, 1000);
+        this.updateSpeed(newSpeed);
+    }
+
+    decreaseSpeed() {
+        const newSpeed = Math.max(this.currentWPM - 25, 100);
+        this.updateSpeed(newSpeed);
+    }
+
+    updateSpeed(newSpeed) {
+        this.currentWPM = newSpeed;
+        this.speedValue.textContent = this.currentWPM;
+        this.speedSlider.value = this.currentWPM;
+        
+        // If currently playing in manual mode, restart with new speed
+        if (this.isPlaying && this.mode === 'manual') {
+            this.stop();
+            this.play();
+        }
     }
     
     toggleSidebar() {
@@ -626,6 +644,33 @@ class SpeedReader {
             content.classList.remove('active');
         });
         document.getElementById(tabName + 'Tab').classList.add('active');
+    }
+
+    switchMainTab(tabName) {
+        // Update main tab buttons
+        document.querySelectorAll('.main-tab-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.tab === tabName);
+        });
+        
+        // Update main tab panels
+        document.querySelectorAll('.tab-panel').forEach(panel => {
+            panel.classList.remove('active');
+        });
+        document.getElementById(tabName + 'Panel').classList.add('active');
+        
+        // Special handling for certain tabs
+        if (tabName === 'input') {
+            // Load library when switching to input tab if library hasn't been loaded
+            let libraryLoaded = false;
+            const libraryTabBtn = document.querySelector('.tab-btn[data-tab="library"]');
+            if (libraryTabBtn && !libraryLoaded) {
+                // Only load if library tab is active
+                if (document.getElementById('libraryTab').classList.contains('active')) {
+                    this.loadLibrary();
+                    libraryLoaded = true;
+                }
+            }
+        }
     }
 
     async loadLibrary() {

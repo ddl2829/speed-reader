@@ -16,29 +16,43 @@
         <header class="app-header">
             <h1>Speed Reader</h1>
             <div class="header-controls">
-                <button id="libraryBtn" class="btn-icon" title="Library">📚</button>
                 <button id="settingsBtn" class="btn-icon" title="Settings">⚙️</button>
             </div>
         </header>
 
-        <!-- Help Section -->
-        <div id="helpSection" class="help-section">
-            <button id="helpToggle" class="help-toggle">
-                <span class="help-toggle-icon">ℹ️</span>
-                <span class="help-toggle-text">How to Use Speed Reader</span>
-                <span class="help-toggle-arrow">▼</span>
-            </button>
-            <div id="helpContent" class="help-content">
-                <div class="help-inner">
+        <!-- Main Tab Navigation -->
+        <nav class="main-tabs">
+            <button class="main-tab-btn active" data-tab="help">📖 How to Use</button>
+            <button class="main-tab-btn" data-tab="input">📝 Load Text</button>
+            <button class="main-tab-btn" data-tab="reader">🚀 Speed Reader</button>
+        </nav>
+
+        <!-- Tab Content Panels -->
+        <main class="tab-panels">
+            
+            <!-- Tab 1: Help Content -->
+            <div id="helpPanel" class="tab-panel active">
+                <div class="help-content">
                     <h2>Welcome to Speed Reader!</h2>
-                    <p>This app helps you practice and improve your reading speed using the RSVP (Rapid Serial Visual Presentation) technique.</p>
+                    <p>This app helps you practice and improve your reading speed using the <strong>RSVP (Rapid Serial Visual Presentation)</strong> technique.</p>
+                    
+                    <div class="rsvp-explanation">
+                        <h3>🧠 What is RSVP?</h3>
+                        <p>RSVP displays one word at a time in the center of your screen at a controlled speed. This technique:</p>
+                        <ul>
+                            <li><strong>Eliminates eye movement</strong> - Your eyes stay fixed on one spot instead of scanning across lines</li>
+                            <li><strong>Reduces subvocalization</strong> - Minimizes the internal "voice" that slows down reading</li>
+                            <li><strong>Increases focus</strong> - Forces attention on individual words without distractions</li>
+                            <li><strong>Improves comprehension</strong> - Your brain processes words more efficiently at higher speeds</li>
+                        </ul>
+                    </div>
                     
                     <div class="help-columns">
                         <div class="help-column">
                             <h3>🚀 Getting Started</h3>
                             <ol>
-                                <li><strong>Load Text:</strong> Paste text, upload a PDF, or choose from the library</li>
-                                <li><strong>Set Speed:</strong> Adjust WPM (words per minute) with the slider</li>
+                                <li><strong>Load Text:</strong> Go to the "Load Text" tab to paste text, upload a PDF, or choose from the library</li>
+                                <li><strong>Set Speed:</strong> In the "Speed Reader" tab, adjust WPM (words per minute) with the slider</li>
                                 <li><strong>Press Play:</strong> Click ▶️ or press spacebar to start</li>
                             </ol>
                             
@@ -54,6 +68,7 @@
                             <ul>
                                 <li><kbd>Space</kbd> - Play/Pause</li>
                                 <li><kbd>←</kbd> / <kbd>→</kbd> - Previous/Next word</li>
+                                <li><kbd>↑</kbd> / <kbd>↓</kbd> - Increase/Decrease speed (±25 WPM)</li>
                                 <li><kbd>R</kbd> - Reset to beginning</li>
                                 <li><kbd>S</kbd> - Toggle sidebar text view</li>
                             </ul>
@@ -74,108 +89,113 @@
                     </p>
                 </div>
             </div>
-        </div>
 
-        <!-- Main Reader Display -->
-        <main class="reader-container">
-            <div id="wordDisplay" class="word-display">
-                <span id="currentWord">Welcome</span>
-            </div>
-            
-            <!-- Speed Controls -->
-            <div class="speed-controls">
-                <div class="speed-info">
-                    <label for="speedSlider">Speed (WPM):</label>
-                    <span id="speedValue">250</span>
-                </div>
-                <input type="range" id="speedSlider" min="100" max="1000" value="250" step="10">
-                
-                <div class="mode-toggle">
-                    <label>
-                        <input type="radio" name="mode" value="manual" checked>
-                        Manual Speed
-                    </label>
-                    <label>
-                        <input type="radio" name="mode" value="practice">
-                        Practice Mode
-                    </label>
-                </div>
-                
-                <div id="practiceOptions" class="practice-options hidden">
-                    <label>
-                        Start Speed: <input type="number" id="startSpeed" value="200" min="100" max="500">
-                    </label>
-                    <label>
-                        Ramp Rate: <input type="number" id="rampRate" value="10" min="5" max="50"> WPM/min
-                    </label>
+            <!-- Tab 2: Text Input -->
+            <div id="inputPanel" class="tab-panel">
+                <div class="input-content">
+                    <div class="input-tabs">
+                        <button class="tab-btn active" data-tab="paste">Paste Text</button>
+                        <button class="tab-btn" data-tab="upload">Upload PDF</button>
+                        <button class="tab-btn" data-tab="library">Library</button>
+                    </div>
+
+                    <div id="pasteTab" class="tab-content active">
+                        <textarea id="textInput" placeholder="Paste your text here..."></textarea>
+                        <button id="loadTextBtn" class="btn btn-primary">Load Text</button>
+                    </div>
+
+                    <div id="uploadTab" class="tab-content">
+                        <div class="upload-area">
+                            <input type="file" id="pdfInput" accept=".pdf" class="hidden">
+                            <label for="pdfInput" class="upload-label">
+                                📄 Click to upload PDF or drag & drop
+                            </label>
+                            <div id="uploadStatus"></div>
+                        </div>
+                    </div>
+
+                    <div id="libraryTab" class="tab-content">
+                        <div class="library-controls">
+                            <input type="text" id="searchInput" placeholder="Search books or authors...">
+                            <button id="searchGutenbergBtn" class="btn">Search Catalog</button>
+                            <select id="categoryFilter">
+                                <option value="">All Categories</option>
+                                <option value="fiction">Fiction</option>
+                                <option value="science">Science</option>
+                                <option value="history">History</option>
+                                <option value="philosophy">Philosophy</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div class="library-info">
+                            <small>Browse popular books below or search the full Project Gutenberg catalog above</small>
+                        </div>
+                        <div id="bookList" class="book-list">
+                            <div class="loading">Loading library...</div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <!-- Playback Controls -->
-            <div class="playback-controls">
-                <button id="prevBtn" class="btn">⏮️</button>
-                <button id="playPauseBtn" class="btn btn-primary">▶️ Start</button>
-                <button id="nextBtn" class="btn">⏭️</button>
-                <button id="resetBtn" class="btn">🔄 Reset</button>
-                <button id="sidebarToggleBtn" class="btn">📖 Text</button>
+            <!-- Tab 3: Speed Reader -->
+            <div id="readerPanel" class="tab-panel">
+                <div class="reader-container">
+                    <div id="wordDisplay" class="word-display">
+                        <span id="currentWord">Welcome</span>
+                    </div>
+                    
+                    <!-- Speed Controls -->
+                    <div class="speed-controls">
+                        <div class="speed-info">
+                            <label for="speedSlider">Speed (WPM):</label>
+                            <span id="speedValue">250</span>
+                        </div>
+                        <input type="range" id="speedSlider" min="100" max="1000" value="250" step="10">
+                        
+                        <div class="mode-toggle">
+                            <label>
+                                <input type="radio" name="mode" value="manual" checked>
+                                Manual Speed
+                            </label>
+                            <label>
+                                <input type="radio" name="mode" value="practice">
+                                Practice Mode
+                            </label>
+                        </div>
+                        
+                        <div id="practiceOptions" class="practice-options hidden">
+                            <label>
+                                Start Speed: <input type="number" id="startSpeed" value="200" min="100" max="500">
+                            </label>
+                            <label>
+                                Ramp Rate: <input type="number" id="rampRate" value="10" min="5" max="50"> WPM/min
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Playback Controls -->
+                    <div class="playback-controls">
+                        <button id="prevBtn" class="btn">⏮️</button>
+                        <button id="playPauseBtn" class="btn btn-primary">▶️ Start</button>
+                        <button id="nextBtn" class="btn">⏭️</button>
+                        <button id="resetBtn" class="btn">🔄 Reset</button>
+                        <button id="sidebarToggleBtn" class="btn">📖 Text</button>
+                    </div>
+
+                    <!-- Progress Bar -->
+                    <div class="progress-container">
+                        <div id="progressBar" class="progress-bar">
+                            <div id="progressFill" class="progress-fill"></div>
+                        </div>
+                        <div class="progress-info">
+                            <span id="wordCount">0 / 0 words</span>
+                            <span id="timeRemaining">0:00 remaining</span>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <!-- Progress Bar -->
-            <div class="progress-container">
-                <div id="progressBar" class="progress-bar">
-                    <div id="progressFill" class="progress-fill"></div>
-                </div>
-                <div class="progress-info">
-                    <span id="wordCount">0 / 0 words</span>
-                    <span id="timeRemaining">0:00 remaining</span>
-                </div>
-            </div>
         </main>
-
-        <!-- Content Input Section -->
-        <section class="content-input">
-            <div class="input-tabs">
-                <button class="tab-btn active" data-tab="paste">Paste Text</button>
-                <button class="tab-btn" data-tab="upload">Upload PDF</button>
-                <button class="tab-btn" data-tab="library">Library</button>
-            </div>
-
-            <div id="pasteTab" class="tab-content active">
-                <textarea id="textInput" placeholder="Paste your text here..."></textarea>
-                <button id="loadTextBtn" class="btn btn-primary">Load Text</button>
-            </div>
-
-            <div id="uploadTab" class="tab-content">
-                <div class="upload-area">
-                    <input type="file" id="pdfInput" accept=".pdf" class="hidden">
-                    <label for="pdfInput" class="upload-label">
-                        📄 Click to upload PDF or drag & drop
-                    </label>
-                    <div id="uploadStatus"></div>
-                </div>
-            </div>
-
-            <div id="libraryTab" class="tab-content">
-                <div class="library-controls">
-                    <input type="text" id="searchInput" placeholder="Search books or authors...">
-                    <button id="searchGutenbergBtn" class="btn">Search Catalog</button>
-                    <select id="categoryFilter">
-                        <option value="">All Categories</option>
-                        <option value="fiction">Fiction</option>
-                        <option value="science">Science</option>
-                        <option value="history">History</option>
-                        <option value="philosophy">Philosophy</option>
-                        <option value="other">Other</option>
-                    </select>
-                </div>
-                <div class="library-info">
-                    <small>Browse popular books below or search the full Project Gutenberg catalog above</small>
-                </div>
-                <div id="bookList" class="book-list">
-                    <div class="loading">Loading library...</div>
-                </div>
-            </div>
-        </section>
 
         <!-- Sidebar for Text Navigation -->
         <aside id="textSidebar" class="text-sidebar">
