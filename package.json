@@ -1,0 +1,29 @@
+{
+  "name": "speedreader",
+  "version": "1.0.0",
+  "description": "Speed reading application using RSVP technique",
+  "main": "index.html",
+  "scripts": {
+    "start": "node server.js",
+    "test": "playwright test",
+    "test:headed": "SLOW_MO=500 playwright test --headed",
+    "test:ui": "playwright test --ui",
+    "test:debug": "playwright test --debug",
+    "test:report": "playwright show-report",
+    "install-playwright": "playwright install"
+  },
+  "keywords": [
+    "speed-reading",
+    "rsvp",
+    "education",
+    "reading"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@playwright/test": "^1.40.0"
+  },
+  "engines": {
+    "node": ">=16"
+  }
+}

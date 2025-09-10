@@ -529,9 +529,9 @@ class SpeedReader {
     }
 
     updateProgress() {
-        const progress = this.words.length > 0 ? (this.currentIndex / this.words.length) * 100 : 0;
+        const progress = this.words.length > 0 ? ((this.currentIndex + 1) / this.words.length) * 100 : 0;
         this.progressBar.style.width = progress + '%';
-        this.wordCount.textContent = `${this.currentIndex} / ${this.words.length} words`;
+        this.wordCount.textContent = `${this.currentIndex + 1} / ${this.words.length} words`;
         
         // Calculate time remaining
         if (this.words.length > 0 && this.currentIndex < this.words.length) {
