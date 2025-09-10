@@ -6,6 +6,9 @@
     <title>Speed Reader - Learn to Read Faster</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="manifest" href="manifest.json">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Roboto:wght@400;500&family=Open+Sans:wght@400;600&family=Lato:wght@400;700&family=Montserrat:wght@400;600&family=Poppins:wght@400;600&family=Merriweather:wght@400;700&family=Playfair+Display:wght@400;700&family=Crimson+Text:wght@400;600&family=Libre+Baskerville:wght@400;700&family=Source+Code+Pro:wght@400;600&family=JetBrains+Mono:wght@400;600&family=Lexend:wght@400;600&family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="app-container">
@@ -17,6 +20,61 @@
                 <button id="settingsBtn" class="btn-icon" title="Settings">⚙️</button>
             </div>
         </header>
+
+        <!-- Help Section -->
+        <div id="helpSection" class="help-section">
+            <button id="helpToggle" class="help-toggle">
+                <span class="help-toggle-icon">ℹ️</span>
+                <span class="help-toggle-text">How to Use Speed Reader</span>
+                <span class="help-toggle-arrow">▼</span>
+            </button>
+            <div id="helpContent" class="help-content">
+                <div class="help-inner">
+                    <h2>Welcome to Speed Reader!</h2>
+                    <p>This app helps you practice and improve your reading speed using the RSVP (Rapid Serial Visual Presentation) technique.</p>
+                    
+                    <div class="help-columns">
+                        <div class="help-column">
+                            <h3>🚀 Getting Started</h3>
+                            <ol>
+                                <li><strong>Load Text:</strong> Paste text, upload a PDF, or choose from the library</li>
+                                <li><strong>Set Speed:</strong> Adjust WPM (words per minute) with the slider</li>
+                                <li><strong>Press Play:</strong> Click ▶️ or press spacebar to start</li>
+                            </ol>
+                            
+                            <h3>📖 Reading Modes</h3>
+                            <ul>
+                                <li><strong>Manual Speed:</strong> Fixed reading speed you control</li>
+                                <li><strong>Practice Mode:</strong> Speed gradually increases over time</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="help-column">
+                            <h3>⌨️ Keyboard Shortcuts</h3>
+                            <ul>
+                                <li><kbd>Space</kbd> - Play/Pause</li>
+                                <li><kbd>←</kbd> / <kbd>→</kbd> - Previous/Next word</li>
+                                <li><kbd>R</kbd> - Reset to beginning</li>
+                                <li><kbd>S</kbd> - Toggle sidebar text view</li>
+                            </ul>
+                            
+                            <h3>💡 Tips</h3>
+                            <ul>
+                                <li>Start at 200-250 WPM and gradually increase</li>
+                                <li>Focus on the center of each word</li>
+                                <li>Don't try to subvocalize (say words in your head)</li>
+                                <li>Use the sidebar to jump to specific sections</li>
+                                <li>Take breaks to avoid eye strain</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <p class="help-footer">
+                        <strong>Project Gutenberg Library:</strong> Access thousands of free public domain books. Search by title or author, or browse popular classics.
+                    </p>
+                </div>
+            </div>
+        </div>
 
         <!-- Main Reader Display -->
         <main class="reader-container">
@@ -130,38 +188,165 @@
 
         <!-- Settings Modal -->
         <div id="settingsModal" class="modal">
-            <div class="modal-content">
+            <div class="modal-content modal-large">
                 <div class="modal-header">
                     <h2>Settings</h2>
                     <button id="closeSettingsBtn" class="btn-icon">✕</button>
                 </div>
                 <div class="modal-body">
+                    <!-- Theme Presets -->
                     <div class="settings-group">
-                        <h3>Visual Settings</h3>
+                        <h3>Theme Presets</h3>
+                        <div class="theme-presets">
+                            <button class="theme-preset" data-theme="light">
+                                <span class="theme-preview" style="background: #fff; color: #000;">Aa</span>
+                                <span>Light</span>
+                            </button>
+                            <button class="theme-preset" data-theme="dark">
+                                <span class="theme-preview" style="background: #111; color: #fff;">Aa</span>
+                                <span>Dark</span>
+                            </button>
+                            <button class="theme-preset" data-theme="sepia">
+                                <span class="theme-preview" style="background: #f4f1e8; color: #5c4b37;">Aa</span>
+                                <span>Sepia</span>
+                            </button>
+                            <button class="theme-preset" data-theme="contrast">
+                                <span class="theme-preview" style="background: #000; color: #fff;">Aa</span>
+                                <span>High Contrast</span>
+                            </button>
+                            <button class="theme-preset" data-theme="ocean">
+                                <span class="theme-preview" style="background: #001f3f; color: #7fdbff;">Aa</span>
+                                <span>Ocean</span>
+                            </button>
+                            <button class="theme-preset" data-theme="forest">
+                                <span class="theme-preview" style="background: #1a3626; color: #a8e6a3;">Aa</span>
+                                <span>Forest</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Color Customization -->
+                    <div class="settings-group">
+                        <h3>Custom Colors</h3>
+                        <div class="color-settings">
+                            <label class="color-setting">
+                                <span>Background:</span>
+                                <div class="color-input-group">
+                                    <input type="color" id="bgColorPicker" value="#ffffff">
+                                    <input type="text" id="bgColorText" class="color-text" value="#ffffff" placeholder="#ffffff">
+                                </div>
+                            </label>
+                            <label class="color-setting">
+                                <span>Text:</span>
+                                <div class="color-input-group">
+                                    <input type="color" id="textColorPicker" value="#000000">
+                                    <input type="text" id="textColorText" class="color-text" value="#000000" placeholder="#000000">
+                                </div>
+                            </label>
+                            <label class="color-setting">
+                                <span>Accent:</span>
+                                <div class="color-input-group">
+                                    <input type="color" id="accentColorPicker" value="#2563eb">
+                                    <input type="text" id="accentColorText" class="color-text" value="#2563eb" placeholder="#2563eb">
+                                </div>
+                            </label>
+                            <label class="color-setting">
+                                <span>Word Display BG:</span>
+                                <div class="color-input-group">
+                                    <input type="color" id="displayBgColorPicker" value="#ffffff">
+                                    <input type="text" id="displayBgColorText" class="color-text" value="#ffffff" placeholder="#ffffff">
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Font Settings -->
+                    <div class="settings-group">
+                        <h3>Typography</h3>
                         <label>
                             Font Size:
                             <input type="range" id="fontSizeSlider" min="20" max="100" value="48">
                             <span id="fontSizeValue">48px</span>
                         </label>
-                        <label>
-                            Theme:
-                            <select id="themeSelect">
-                                <option value="light">Light</option>
-                                <option value="dark">Dark</option>
-                                <option value="sepia">Sepia</option>
-                                <option value="contrast">High Contrast</option>
-                            </select>
-                        </label>
-                        <label>
-                            Font Family:
-                            <select id="fontSelect">
-                                <option value="system-ui">System</option>
-                                <option value="'Georgia', serif">Georgia</option>
-                                <option value="'Arial', sans-serif">Arial</option>
-                                <option value="'Courier New', monospace">Courier</option>
-                            </select>
-                        </label>
+                        
+                        <label>Font Family:</label>
+                        <div class="font-grid">
+                            <button class="font-option" data-font="system-ui, -apple-system, sans-serif">
+                                <span class="font-preview" style="font-family: system-ui, -apple-system, sans-serif;">System Default</span>
+                                <span class="font-name">System UI</span>
+                            </button>
+                            <button class="font-option" data-font="'Inter', sans-serif">
+                                <span class="font-preview" style="font-family: 'Inter', sans-serif;">The quick brown fox</span>
+                                <span class="font-name">Inter</span>
+                            </button>
+                            <button class="font-option" data-font="'Roboto', sans-serif">
+                                <span class="font-preview" style="font-family: 'Roboto', sans-serif;">The quick brown fox</span>
+                                <span class="font-name">Roboto</span>
+                            </button>
+                            <button class="font-option" data-font="'Open Sans', sans-serif">
+                                <span class="font-preview" style="font-family: 'Open Sans', sans-serif;">The quick brown fox</span>
+                                <span class="font-name">Open Sans</span>
+                            </button>
+                            <button class="font-option" data-font="'Lato', sans-serif">
+                                <span class="font-preview" style="font-family: 'Lato', sans-serif;">The quick brown fox</span>
+                                <span class="font-name">Lato</span>
+                            </button>
+                            <button class="font-option" data-font="'Montserrat', sans-serif">
+                                <span class="font-preview" style="font-family: 'Montserrat', sans-serif;">The quick brown fox</span>
+                                <span class="font-name">Montserrat</span>
+                            </button>
+                            <button class="font-option" data-font="'Poppins', sans-serif">
+                                <span class="font-preview" style="font-family: 'Poppins', sans-serif;">The quick brown fox</span>
+                                <span class="font-name">Poppins</span>
+                            </button>
+                            <button class="font-option" data-font="'Merriweather', serif">
+                                <span class="font-preview" style="font-family: 'Merriweather', serif;">The quick brown fox</span>
+                                <span class="font-name">Merriweather</span>
+                            </button>
+                            <button class="font-option" data-font="'Georgia', serif">
+                                <span class="font-preview" style="font-family: 'Georgia', serif;">The quick brown fox</span>
+                                <span class="font-name">Georgia</span>
+                            </button>
+                            <button class="font-option" data-font="'Playfair Display', serif">
+                                <span class="font-preview" style="font-family: 'Playfair Display', serif;">The quick brown fox</span>
+                                <span class="font-name">Playfair Display</span>
+                            </button>
+                            <button class="font-option" data-font="'Crimson Text', serif">
+                                <span class="font-preview" style="font-family: 'Crimson Text', serif;">The quick brown fox</span>
+                                <span class="font-name">Crimson Text</span>
+                            </button>
+                            <button class="font-option" data-font="'Libre Baskerville', serif">
+                                <span class="font-preview" style="font-family: 'Libre Baskerville', serif;">The quick brown fox</span>
+                                <span class="font-name">Libre Baskerville</span>
+                            </button>
+                            <button class="font-option" data-font="'Source Code Pro', monospace">
+                                <span class="font-preview" style="font-family: 'Source Code Pro', monospace;">The quick brown fox</span>
+                                <span class="font-name">Source Code Pro</span>
+                            </button>
+                            <button class="font-option" data-font="'JetBrains Mono', monospace">
+                                <span class="font-preview" style="font-family: 'JetBrains Mono', monospace;">The quick brown fox</span>
+                                <span class="font-name">JetBrains Mono</span>
+                            </button>
+                            <button class="font-option" data-font="'Courier New', monospace">
+                                <span class="font-preview" style="font-family: 'Courier New', monospace;">The quick brown fox</span>
+                                <span class="font-name">Courier New</span>
+                            </button>
+                            <button class="font-option" data-font="'Lexend', sans-serif">
+                                <span class="font-preview" style="font-family: 'Lexend', sans-serif;">The quick brown fox</span>
+                                <span class="font-name">Lexend (Readability)</span>
+                            </button>
+                            <button class="font-option" data-font="'Atkinson Hyperlegible', sans-serif">
+                                <span class="font-preview" style="font-family: 'Atkinson Hyperlegible', sans-serif;">The quick brown fox</span>
+                                <span class="font-name">Atkinson Hyperlegible</span>
+                            </button>
+                            <button class="font-option" data-font="'OpenDyslexic', sans-serif">
+                                <span class="font-preview" style="font-family: 'OpenDyslexic', sans-serif;">The quick brown fox</span>
+                                <span class="font-name">OpenDyslexic</span>
+                            </button>
+                        </div>
                     </div>
+
+                    <!-- Reading Settings -->
                     <div class="settings-group">
                         <h3>Reading Settings</h3>
                         <label>
@@ -172,6 +357,12 @@
                             <input type="checkbox" id="showPunctuation" checked>
                             Pause on punctuation
                         </label>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="settings-actions">
+                        <button id="saveCustomTheme" class="btn">Save as Custom Theme</button>
+                        <button id="resetDefaults" class="btn">Reset to Defaults</button>
                     </div>
                 </div>
             </div>

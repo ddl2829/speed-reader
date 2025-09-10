@@ -12,9 +12,15 @@ class SpeedReader {
         this.settings = {
             fontSize: 48,
             theme: 'light',
-            fontFamily: 'system-ui',
+            fontFamily: 'system-ui, -apple-system, sans-serif',
             highlightCenter: false,
-            pauseOnPunctuation: true
+            pauseOnPunctuation: true,
+            customColors: {
+                background: '#ffffff',
+                text: '#000000',
+                accent: '#2563eb',
+                displayBg: '#ffffff'
+            }
         };
         
         this.initializeElements();
@@ -73,6 +79,24 @@ class SpeedReader {
     }
 
     attachEventListeners() {
+        // Help section toggle
+        const helpToggle = document.getElementById('helpToggle');
+        const helpSection = document.getElementById('helpSection');
+        if (helpToggle && helpSection) {
+            helpToggle.addEventListener('click', () => {
+                helpSection.classList.toggle('expanded');
+                // Save preference
+                const isExpanded = helpSection.classList.contains('expanded');
+                localStorage.setItem('helpExpanded', isExpanded);
+            });
+            
+            // Load preference
+            const savedExpanded = localStorage.getItem('helpExpanded');
+            if (savedExpanded === 'true') {
+                helpSection.classList.add('expanded');
+            }
+        }
+        
         // Playback controls
         this.playPauseBtn.addEventListener('click', () => this.togglePlayPause());
         this.prevBtn.addEventListener('click', () => this.previousWord());
@@ -163,15 +187,44 @@ class SpeedReader {
             this.applySettings();
         });
         
-        this.themeSelect.addEventListener('change', (e) => {
-            this.settings.theme = e.target.value;
-            this.applySettings();
+        // Theme presets
+        document.querySelectorAll('.theme-preset').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const theme = btn.dataset.theme;
+                this.settings.theme = theme;
+                this.applySettings();
+                this.updateSettingsUI();
+            });
         });
         
-        this.fontSelect.addEventListener('change', (e) => {
-            this.settings.fontFamily = e.target.value;
-            this.applySettings();
+        // Font selection
+        document.querySelectorAll('.font-option').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const font = btn.dataset.font;
+                this.settings.fontFamily = font;
+                this.applySettings();
+                this.updateSettingsUI();
+            });
         });
+        
+        // Color pickers
+        this.initializeColorPickers();
+        
+        // Legacy theme select (if still exists)
+        if (this.themeSelect) {
+            this.themeSelect.addEventListener('change', (e) => {
+                this.settings.theme = e.target.value;
+                this.applySettings();
+            });
+        }
+        
+        // Legacy font select (if still exists)
+        if (this.fontSelect) {
+            this.fontSelect.addEventListener('change', (e) => {
+                this.settings.fontFamily = e.target.value;
+                this.applySettings();
+            });
+        }
         
         this.highlightCenterCheck.addEventListener('change', (e) => {
             this.settings.highlightCenter = e.target.checked;
@@ -770,9 +823,225 @@ class SpeedReader {
         }
     }
 
+    initializeColorPickers() {
+        // Background color
+        const bgPicker = document.getElementById('bgColorPicker');
+        const bgText = document.getElementById('bgColorText');
+        if (bgPicker && bgText) {
+            bgPicker.addEventListener('input', (e) => {
+                bgText.value = e.target.value;
+                this.settings.customColors.background = e.target.value;
+                this.applyCustomColors();
+            });
+            bgText.addEventListener('input', (e) => {
+                if (/^#[0-9A-Fa-f]{6}$/.test(e.target.value)) {
+                    bgPicker.value = e.target.value;
+                    this.settings.customColors.background = e.target.value;
+                    this.applyCustomColors();
+                }
+            });
+        }
+        
+        // Text color
+        const textPicker = document.getElementById('textColorPicker');
+        const textColorText = document.getElementById('textColorText');
+        if (textPicker && textColorText) {
+            textPicker.addEventListener('input', (e) => {
+                textColorText.value = e.target.value;
+                this.settings.customColors.text = e.target.value;
+                this.applyCustomColors();
+            });
+            textColorText.addEventListener('input', (e) => {
+                if (/^#[0-9A-Fa-f]{6}$/.test(e.target.value)) {
+                    textPicker.value = e.target.value;
+                    this.settings.customColors.text = e.target.value;
+                    this.applyCustomColors();
+                }
+            });
+        }
+        
+        // Accent color
+        const accentPicker = document.getElementById('accentColorPicker');
+        const accentText = document.getElementById('accentColorText');
+        if (accentPicker && accentText) {
+            accentPicker.addEventListener('input', (e) => {
+                accentText.value = e.target.value;
+                this.settings.customColors.accent = e.target.value;
+                this.applyCustomColors();
+            });
+            accentText.addEventListener('input', (e) => {
+                if (/^#[0-9A-Fa-f]{6}$/.test(e.target.value)) {
+                    accentPicker.value = e.target.value;
+                    this.settings.customColors.accent = e.target.value;
+                    this.applyCustomColors();
+                }
+            });
+        }
+        
+        // Display background color
+        const displayBgPicker = document.getElementById('displayBgColorPicker');
+        const displayBgText = document.getElementById('displayBgColorText');
+        if (displayBgPicker && displayBgText) {
+            displayBgPicker.addEventListener('input', (e) => {
+                displayBgText.value = e.target.value;
+                this.settings.customColors.displayBg = e.target.value;
+                this.applyCustomColors();
+            });
+            displayBgText.addEventListener('input', (e) => {
+                if (/^#[0-9A-Fa-f]{6}$/.test(e.target.value)) {
+                    displayBgPicker.value = e.target.value;
+                    this.settings.customColors.displayBg = e.target.value;
+                    this.applyCustomColors();
+                }
+            });
+        }
+        
+        // Save custom theme button
+        const saveCustomBtn = document.getElementById('saveCustomTheme');
+        if (saveCustomBtn) {
+            saveCustomBtn.addEventListener('click', () => {
+                this.settings.theme = 'custom';
+                this.saveSettings();
+                alert('Custom theme saved!');
+            });
+        }
+        
+        // Reset defaults button
+        const resetBtn = document.getElementById('resetDefaults');
+        if (resetBtn) {
+            resetBtn.addEventListener('click', () => {
+                this.resetToDefaults();
+            });
+        }
+    }
+    
+    applyCustomColors() {
+        this.settings.theme = 'custom';
+        document.body.dataset.theme = 'custom';
+        
+        // Apply custom colors as CSS variables
+        const root = document.documentElement;
+        root.style.setProperty('--bg-color', this.settings.customColors.background);
+        root.style.setProperty('--text-color', this.settings.customColors.text);
+        root.style.setProperty('--primary-color', this.settings.customColors.accent);
+        root.style.setProperty('--word-display-bg', this.settings.customColors.displayBg);
+        
+        // Calculate derived colors
+        const sidebarBg = this.lightenDarkenColor(this.settings.customColors.background, 10);
+        root.style.setProperty('--sidebar-bg', sidebarBg);
+        
+        const borderColor = this.lightenDarkenColor(this.settings.customColors.text, -60);
+        root.style.setProperty('--border-color', borderColor);
+        
+        this.saveSettings();
+    }
+    
+    lightenDarkenColor(col, amt) {
+        let usePound = false;
+        if (col[0] == "#") {
+            col = col.slice(1);
+            usePound = true;
+        }
+        let num = parseInt(col, 16);
+        let r = (num >> 16) + amt;
+        if (r > 255) r = 255;
+        else if (r < 0) r = 0;
+        let b = ((num >> 8) & 0x00FF) + amt;
+        if (b > 255) b = 255;
+        else if (b < 0) b = 0;
+        let g = (num & 0x0000FF) + amt;
+        if (g > 255) g = 255;
+        else if (g < 0) g = 0;
+        return (usePound ? "#" : "") + (g | (b << 8) | (r << 16)).toString(16).padStart(6, '0');
+    }
+    
+    updateSettingsUI() {
+        // Update theme preset buttons
+        document.querySelectorAll('.theme-preset').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.theme === this.settings.theme);
+        });
+        
+        // Update font option buttons
+        document.querySelectorAll('.font-option').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.font === this.settings.fontFamily);
+        });
+        
+        // Update color pickers if custom theme
+        if (this.settings.theme === 'custom') {
+            const bgPicker = document.getElementById('bgColorPicker');
+            const bgText = document.getElementById('bgColorText');
+            if (bgPicker) bgPicker.value = this.settings.customColors.background;
+            if (bgText) bgText.value = this.settings.customColors.background;
+            
+            const textPicker = document.getElementById('textColorPicker');
+            const textColorText = document.getElementById('textColorText');
+            if (textPicker) textPicker.value = this.settings.customColors.text;
+            if (textColorText) textColorText.value = this.settings.customColors.text;
+            
+            const accentPicker = document.getElementById('accentColorPicker');
+            const accentText = document.getElementById('accentColorText');
+            if (accentPicker) accentPicker.value = this.settings.customColors.accent;
+            if (accentText) accentText.value = this.settings.customColors.accent;
+            
+            const displayBgPicker = document.getElementById('displayBgColorPicker');
+            const displayBgText = document.getElementById('displayBgColorText');
+            if (displayBgPicker) displayBgPicker.value = this.settings.customColors.displayBg;
+            if (displayBgText) displayBgText.value = this.settings.customColors.displayBg;
+        }
+    }
+    
+    resetToDefaults() {
+        this.settings = {
+            fontSize: 48,
+            theme: 'light',
+            fontFamily: 'system-ui, -apple-system, sans-serif',
+            highlightCenter: false,
+            pauseOnPunctuation: true,
+            customColors: {
+                background: '#ffffff',
+                text: '#000000',
+                accent: '#2563eb',
+                displayBg: '#ffffff'
+            }
+        };
+        
+        // Reset UI elements
+        this.fontSizeSlider.value = 48;
+        this.fontSizeValue.textContent = '48px';
+        this.highlightCenterCheck.checked = false;
+        this.pausePunctuationCheck.checked = true;
+        
+        // Apply and save
+        this.applySettings();
+        this.updateSettingsUI();
+        
+        // Clear custom CSS properties
+        const root = document.documentElement;
+        root.style.removeProperty('--bg-color');
+        root.style.removeProperty('--text-color');
+        root.style.removeProperty('--primary-color');
+        root.style.removeProperty('--word-display-bg');
+        root.style.removeProperty('--sidebar-bg');
+        root.style.removeProperty('--border-color');
+    }
+    
     applySettings() {
         // Apply theme
         document.body.dataset.theme = this.settings.theme;
+        
+        // Apply custom colors if custom theme
+        if (this.settings.theme === 'custom') {
+            this.applyCustomColors();
+        } else {
+            // Clear custom CSS properties
+            const root = document.documentElement;
+            root.style.removeProperty('--bg-color');
+            root.style.removeProperty('--text-color');
+            root.style.removeProperty('--primary-color');
+            root.style.removeProperty('--word-display-bg');
+            root.style.removeProperty('--sidebar-bg');
+            root.style.removeProperty('--border-color');
+        }
         
         // Apply font settings
         this.wordDisplay.style.fontSize = this.settings.fontSize + 'px';
@@ -792,16 +1061,28 @@ class SpeedReader {
     loadSettings() {
         const saved = localStorage.getItem('speedReaderSettings');
         if (saved) {
-            this.settings = JSON.parse(saved);
+            const loadedSettings = JSON.parse(saved);
+            // Merge with defaults to ensure all properties exist
+            this.settings = {
+                ...this.settings,
+                ...loadedSettings,
+                customColors: {
+                    ...this.settings.customColors,
+                    ...(loadedSettings.customColors || {})
+                }
+            };
             this.applySettings();
             
             // Update UI
             this.fontSizeSlider.value = this.settings.fontSize;
             this.fontSizeValue.textContent = this.settings.fontSize + 'px';
-            this.themeSelect.value = this.settings.theme;
-            this.fontSelect.value = this.settings.fontFamily;
+            if (this.themeSelect) this.themeSelect.value = this.settings.theme;
+            if (this.fontSelect) this.fontSelect.value = this.settings.fontFamily;
             this.highlightCenterCheck.checked = this.settings.highlightCenter;
             this.pausePunctuationCheck.checked = this.settings.pauseOnPunctuation;
+            
+            // Update new UI elements
+            this.updateSettingsUI();
         }
     }
 
