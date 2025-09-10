@@ -225,6 +225,14 @@
                         </div>
                     </div>
 
+                    <!-- Custom Themes -->
+                    <div class="settings-group" id="customThemesSection" style="display: none;">
+                        <h3>Your Custom Themes</h3>
+                        <div id="customThemesList" class="theme-presets">
+                            <!-- Custom themes will be added here dynamically -->
+                        </div>
+                    </div>
+
                     <!-- Color Customization -->
                     <div class="settings-group">
                         <h3>Custom Colors</h3>
@@ -255,6 +263,13 @@
                                 <div class="color-input-group">
                                     <input type="color" id="displayBgColorPicker" value="#ffffff">
                                     <input type="text" id="displayBgColorText" class="color-text" value="#ffffff" placeholder="#ffffff">
+                                </div>
+                            </label>
+                            <label class="color-setting">
+                                <span>Border:</span>
+                                <div class="color-input-group">
+                                    <input type="color" id="borderColorPicker" value="#e5e7eb">
+                                    <input type="text" id="borderColorText" class="color-text" value="#e5e7eb" placeholder="#e5e7eb">
                                 </div>
                             </label>
                         </div>
@@ -361,7 +376,7 @@
 
                     <!-- Actions -->
                     <div class="settings-actions">
-                        <button id="saveCustomTheme" class="btn">Save as Custom Theme</button>
+                        <button id="saveCustomTheme" class="btn">Save Current as Theme</button>
                         <button id="resetDefaults" class="btn">Reset to Defaults</button>
                     </div>
                 </div>

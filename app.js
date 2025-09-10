@@ -19,9 +19,12 @@ class SpeedReader {
                 background: '#ffffff',
                 text: '#000000',
                 accent: '#2563eb',
-                displayBg: '#ffffff'
+                displayBg: '#ffffff',
+                border: '#e5e7eb'
             }
         };
+        
+        this.customThemes = this.loadCustomThemes();
         
         this.initializeElements();
         this.loadSettings();
@@ -175,6 +178,7 @@ class SpeedReader {
         // Settings
         this.settingsBtn.addEventListener('click', () => {
             this.settingsModal.classList.add('open');
+            this.displayCustomThemes(); // Display custom themes
             this.updateSettingsUI(); // Update UI when modal opens
         });
         
@@ -901,13 +905,29 @@ class SpeedReader {
             });
         }
         
+        // Border color
+        const borderPicker = document.getElementById('borderColorPicker');
+        const borderText = document.getElementById('borderColorText');
+        if (borderPicker && borderText) {
+            borderPicker.addEventListener('input', (e) => {
+                borderText.value = e.target.value;
+                this.settings.customColors.border = e.target.value;
+                this.applyCustomColors();
+            });
+            borderText.addEventListener('input', (e) => {
+                if (/^#[0-9A-Fa-f]{6}$/.test(e.target.value)) {
+                    borderPicker.value = e.target.value;
+                    this.settings.customColors.border = e.target.value;
+                    this.applyCustomColors();
+                }
+            });
+        }
+        
         // Save custom theme button
         const saveCustomBtn = document.getElementById('saveCustomTheme');
         if (saveCustomBtn) {
             saveCustomBtn.addEventListener('click', () => {
-                this.settings.theme = 'custom';
-                this.saveSettings();
-                alert('Custom theme saved!');
+                this.saveCustomTheme();
             });
         }
         
@@ -930,13 +950,15 @@ class SpeedReader {
         root.style.setProperty('--text-color', this.settings.customColors.text);
         root.style.setProperty('--primary-color', this.settings.customColors.accent);
         root.style.setProperty('--word-display-bg', this.settings.customColors.displayBg);
+        root.style.setProperty('--border-color', this.settings.customColors.border);
         
-        // Calculate derived colors
+        // Calculate sidebar background (slightly different from main background)
         const sidebarBg = this.lightenDarkenColor(this.settings.customColors.background, 10);
         root.style.setProperty('--sidebar-bg', sidebarBg);
         
-        const borderColor = this.lightenDarkenColor(this.settings.customColors.text, -60);
-        root.style.setProperty('--border-color', borderColor);
+        // Calculate hover color for primary
+        const primaryHover = this.lightenDarkenColor(this.settings.customColors.accent, -20);
+        root.style.setProperty('--primary-hover', primaryHover);
         
         this.saveSettings();
     }
@@ -960,44 +982,175 @@ class SpeedReader {
         return (usePound ? "#" : "") + (g | (b << 8) | (r << 16)).toString(16).padStart(6, '0');
     }
     
+    loadCustomThemes() {
+        const saved = localStorage.getItem('speedReaderCustomThemes');
+        return saved ? JSON.parse(saved) : {};
+    }
+    
+    saveCustomThemes() {
+        localStorage.setItem('speedReaderCustomThemes', JSON.stringify(this.customThemes));
+    }
+    
+    saveCustomTheme() {
+        const themeName = prompt('Enter a name for your custom theme:');
+        if (!themeName || themeName.trim() === '') {
+            return;
+        }
+        
+        const safeName = themeName.trim().toLowerCase().replace(/[^a-z0-9]/g, '-');
+        
+        // Save the current colors as a new theme
+        this.customThemes[safeName] = {
+            name: themeName.trim(),
+            colors: {
+                background: this.settings.customColors.background,
+                text: this.settings.customColors.text,
+                accent: this.settings.customColors.accent,
+                displayBg: this.settings.customColors.displayBg,
+                border: this.settings.customColors.border
+            }
+        };
+        
+        this.saveCustomThemes();
+        this.settings.theme = 'custom-' + safeName;
+        this.saveSettings();
+        this.displayCustomThemes();
+        this.updateSettingsUI();
+        
+        alert(`Theme "${themeName}" saved successfully!`);
+    }
+    
+    deleteCustomTheme(themeId) {
+        const safeName = themeId.replace('custom-', '');
+        if (this.customThemes[safeName]) {
+            const themeName = this.customThemes[safeName].name;
+            if (confirm(`Delete theme "${themeName}"?`)) {
+                delete this.customThemes[safeName];
+                this.saveCustomThemes();
+                this.displayCustomThemes();
+                
+                // If this was the active theme, switch to light
+                if (this.settings.theme === themeId) {
+                    this.settings.theme = 'light';
+                    this.applySettings();
+                    this.updateSettingsUI();
+                }
+            }
+        }
+    }
+    
+    displayCustomThemes() {
+        const customThemesSection = document.getElementById('customThemesSection');
+        const customThemesList = document.getElementById('customThemesList');
+        
+        if (!customThemesList) return;
+        
+        // Clear existing custom themes
+        customThemesList.innerHTML = '';
+        
+        // Show/hide the section based on whether there are custom themes
+        const hasCustomThemes = Object.keys(this.customThemes).length > 0;
+        if (customThemesSection) {
+            customThemesSection.style.display = hasCustomThemes ? 'block' : 'none';
+        }
+        
+        // Add each custom theme
+        Object.entries(this.customThemes).forEach(([safeName, theme]) => {
+            const themeId = 'custom-' + safeName;
+            const button = document.createElement('button');
+            button.className = 'theme-preset custom-theme';
+            button.dataset.preset = themeId;
+            
+            // Create preview
+            const preview = document.createElement('span');
+            preview.className = 'theme-preview';
+            preview.style.background = theme.colors.background;
+            preview.style.color = theme.colors.text;
+            preview.textContent = 'Aa';
+            
+            // Create label
+            const label = document.createElement('span');
+            label.className = 'theme-label';
+            label.textContent = theme.name;
+            
+            // Create delete button
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'delete-theme-btn';
+            deleteBtn.textContent = '×';
+            deleteBtn.onclick = (e) => {
+                e.stopPropagation();
+                this.deleteCustomTheme(themeId);
+            };
+            
+            button.appendChild(preview);
+            button.appendChild(label);
+            button.appendChild(deleteBtn);
+            
+            // Add click handler
+            button.addEventListener('click', () => {
+                this.settings.theme = themeId;
+                this.settings.customColors = { ...theme.colors };
+                this.applySettings();
+                this.updateSettingsUI();
+            });
+            
+            customThemesList.appendChild(button);
+        });
+    }
+    
     updateCustomColorsFromTheme(theme) {
+        // Check if it's a custom theme
+        if (theme.startsWith('custom-')) {
+            const safeName = theme.replace('custom-', '');
+            if (this.customThemes[safeName]) {
+                this.settings.customColors = { ...this.customThemes[safeName].colors };
+                return;
+            }
+        }
+        
         // Define theme color values
         const themeColors = {
             light: {
                 background: '#ffffff',
                 text: '#1f2937',
                 accent: '#2563eb',
-                displayBg: '#ffffff'
+                displayBg: '#ffffff',
+                border: '#e5e7eb'
             },
             dark: {
                 background: '#111827',
                 text: '#f3f4f6',
                 accent: '#2563eb',
-                displayBg: '#1f2937'
+                displayBg: '#1f2937',
+                border: '#374151'
             },
             sepia: {
                 background: '#f4f1e8',
                 text: '#5c4b37',
                 accent: '#8b7355',
-                displayBg: '#faf8f3'
+                displayBg: '#faf8f3',
+                border: '#d4c4b0'
             },
             contrast: {
                 background: '#000000',
                 text: '#ffffff',
                 accent: '#ffffff',
-                displayBg: '#000000'
+                displayBg: '#000000',
+                border: '#ffffff'
             },
             ocean: {
                 background: '#001f3f',
                 text: '#7fdbff',
                 accent: '#39cccc',
-                displayBg: '#002855'
+                displayBg: '#002855',
+                border: '#0074d9'
             },
             forest: {
                 background: '#1a3626',
                 text: '#a8e6a3',
                 accent: '#66bb6a',
-                displayBg: '#244831'
+                displayBg: '#244831',
+                border: '#4a7c59'
             }
         };
         
@@ -1038,6 +1191,11 @@ class SpeedReader {
         const displayBgText = document.getElementById('displayBgColorText');
         if (displayBgPicker) displayBgPicker.value = this.settings.customColors.displayBg;
         if (displayBgText) displayBgText.value = this.settings.customColors.displayBg;
+        
+        const borderPicker = document.getElementById('borderColorPicker');
+        const borderText = document.getElementById('borderColorText');
+        if (borderPicker) borderPicker.value = this.settings.customColors.border || '#e5e7eb';
+        if (borderText) borderText.value = this.settings.customColors.border || '#e5e7eb';
     }
     
     resetToDefaults() {
@@ -1051,7 +1209,8 @@ class SpeedReader {
                 background: '#ffffff',
                 text: '#000000',
                 accent: '#2563eb',
-                displayBg: '#ffffff'
+                displayBg: '#ffffff',
+                border: '#e5e7eb'
             }
         };
         
@@ -1077,10 +1236,15 @@ class SpeedReader {
     
     applySettings() {
         // Apply theme
-        document.body.dataset.theme = this.settings.theme;
+        if (this.settings.theme.startsWith('custom-')) {
+            document.body.dataset.theme = 'custom';
+            this.applyCustomColors();
+        } else {
+            document.body.dataset.theme = this.settings.theme;
+        }
         
         // Apply custom colors if custom theme
-        if (this.settings.theme === 'custom') {
+        if (this.settings.theme === 'custom' || this.settings.theme.startsWith('custom-')) {
             this.applyCustomColors();
         } else {
             // Clear custom CSS properties
