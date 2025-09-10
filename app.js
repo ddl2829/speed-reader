@@ -175,6 +175,7 @@ class SpeedReader {
         // Settings
         this.settingsBtn.addEventListener('click', () => {
             this.settingsModal.classList.add('open');
+            this.updateSettingsUI(); // Update UI when modal opens
         });
         
         this.closeSettingsBtn.addEventListener('click', () => {
@@ -190,8 +191,12 @@ class SpeedReader {
         // Theme presets
         document.querySelectorAll('.theme-preset').forEach(btn => {
             btn.addEventListener('click', (e) => {
-                const theme = btn.dataset.theme;
+                const theme = btn.dataset.preset;
                 this.settings.theme = theme;
+                
+                // Update custom colors to match the preset
+                this.updateCustomColorsFromTheme(theme);
+                
                 this.applySettings();
                 this.updateSettingsUI();
             });
@@ -955,10 +960,57 @@ class SpeedReader {
         return (usePound ? "#" : "") + (g | (b << 8) | (r << 16)).toString(16).padStart(6, '0');
     }
     
+    updateCustomColorsFromTheme(theme) {
+        // Define theme color values
+        const themeColors = {
+            light: {
+                background: '#ffffff',
+                text: '#1f2937',
+                accent: '#2563eb',
+                displayBg: '#ffffff'
+            },
+            dark: {
+                background: '#111827',
+                text: '#f3f4f6',
+                accent: '#2563eb',
+                displayBg: '#1f2937'
+            },
+            sepia: {
+                background: '#f4f1e8',
+                text: '#5c4b37',
+                accent: '#8b7355',
+                displayBg: '#faf8f3'
+            },
+            contrast: {
+                background: '#000000',
+                text: '#ffffff',
+                accent: '#ffffff',
+                displayBg: '#000000'
+            },
+            ocean: {
+                background: '#001f3f',
+                text: '#7fdbff',
+                accent: '#39cccc',
+                displayBg: '#002855'
+            },
+            forest: {
+                background: '#1a3626',
+                text: '#a8e6a3',
+                accent: '#66bb6a',
+                displayBg: '#244831'
+            }
+        };
+        
+        // Update custom colors to match the selected theme
+        if (themeColors[theme]) {
+            this.settings.customColors = themeColors[theme];
+        }
+    }
+    
     updateSettingsUI() {
         // Update theme preset buttons
         document.querySelectorAll('.theme-preset').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.theme === this.settings.theme);
+            btn.classList.toggle('active', btn.dataset.preset === this.settings.theme);
         });
         
         // Update font option buttons
@@ -966,28 +1018,26 @@ class SpeedReader {
             btn.classList.toggle('active', btn.dataset.font === this.settings.fontFamily);
         });
         
-        // Update color pickers if custom theme
-        if (this.settings.theme === 'custom') {
-            const bgPicker = document.getElementById('bgColorPicker');
-            const bgText = document.getElementById('bgColorText');
-            if (bgPicker) bgPicker.value = this.settings.customColors.background;
-            if (bgText) bgText.value = this.settings.customColors.background;
-            
-            const textPicker = document.getElementById('textColorPicker');
-            const textColorText = document.getElementById('textColorText');
-            if (textPicker) textPicker.value = this.settings.customColors.text;
-            if (textColorText) textColorText.value = this.settings.customColors.text;
-            
-            const accentPicker = document.getElementById('accentColorPicker');
-            const accentText = document.getElementById('accentColorText');
-            if (accentPicker) accentPicker.value = this.settings.customColors.accent;
-            if (accentText) accentText.value = this.settings.customColors.accent;
-            
-            const displayBgPicker = document.getElementById('displayBgColorPicker');
-            const displayBgText = document.getElementById('displayBgColorText');
-            if (displayBgPicker) displayBgPicker.value = this.settings.customColors.displayBg;
-            if (displayBgText) displayBgText.value = this.settings.customColors.displayBg;
-        }
+        // Always update color pickers to show current theme colors
+        const bgPicker = document.getElementById('bgColorPicker');
+        const bgText = document.getElementById('bgColorText');
+        if (bgPicker) bgPicker.value = this.settings.customColors.background;
+        if (bgText) bgText.value = this.settings.customColors.background;
+        
+        const textPicker = document.getElementById('textColorPicker');
+        const textColorText = document.getElementById('textColorText');
+        if (textPicker) textPicker.value = this.settings.customColors.text;
+        if (textColorText) textColorText.value = this.settings.customColors.text;
+        
+        const accentPicker = document.getElementById('accentColorPicker');
+        const accentText = document.getElementById('accentColorText');
+        if (accentPicker) accentPicker.value = this.settings.customColors.accent;
+        if (accentText) accentText.value = this.settings.customColors.accent;
+        
+        const displayBgPicker = document.getElementById('displayBgColorPicker');
+        const displayBgText = document.getElementById('displayBgColorText');
+        if (displayBgPicker) displayBgPicker.value = this.settings.customColors.displayBg;
+        if (displayBgText) displayBgText.value = this.settings.customColors.displayBg;
     }
     
     resetToDefaults() {

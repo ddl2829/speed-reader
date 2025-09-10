@@ -1,4 +1,4 @@
-const CACHE_NAME = 'speedreader-v1';
+const CACHE_NAME = 'speedreader-v2'; // Increment version to force update
 const urlsToCache = [
     '/',
     '/index.html',
@@ -11,6 +11,9 @@ const urlsToCache = [
 
 // Install event - cache resources
 self.addEventListener('install', event => {
+    // Force the waiting service worker to become the active service worker
+    self.skipWaiting();
+    
     event.waitUntil(
         caches.open(CACHE_NAME)
             .then(cache => {
@@ -20,39 +23,24 @@ self.addEventListener('install', event => {
     );
 });
 
-// Fetch event - serve from cache when offline
+// Fetch event - Network first, fall back to cache
 self.addEventListener('fetch', event => {
     event.respondWith(
-        caches.match(event.request)
+        fetch(event.request)
             .then(response => {
-                // Cache hit - return response
-                if (response) {
-                    return response;
-                }
-
-                // Clone the request
-                const fetchRequest = event.request.clone();
-
-                return fetch(fetchRequest).then(response => {
-                    // Check if valid response
-                    if (!response || response.status !== 200 || response.type !== 'basic') {
-                        return response;
-                    }
-
-                    // Clone the response
+                // If network request succeeded, update the cache
+                if (response && response.status === 200 && response.type === 'basic') {
                     const responseToCache = response.clone();
-
                     caches.open(CACHE_NAME)
                         .then(cache => {
-                            // Cache the fetched response for future use
                             cache.put(event.request, responseToCache);
                         });
-
-                    return response;
-                }).catch(() => {
-                    // Network request failed, try to get from cache
-                    return caches.match(event.request);
-                });
+                }
+                return response;
+            })
+            .catch(() => {
+                // Network request failed, try to get from cache
+                return caches.match(event.request);
             })
     );
 });
@@ -63,13 +51,17 @@ self.addEventListener('activate', event => {
 
     event.waitUntil(
         caches.keys().then(cacheNames => {
-            return Promise.all(
-                cacheNames.map(cacheName => {
+            return Promise.all([
+                // Delete old caches
+                ...cacheNames.map(cacheName => {
                     if (cacheWhitelist.indexOf(cacheName) === -1) {
+                        console.log('Deleting old cache:', cacheName);
                         return caches.delete(cacheName);
                     }
-                })
-            );
+                }),
+                // Claim all clients immediately
+                clients.claim()
+            ]);
         })
     );
 });

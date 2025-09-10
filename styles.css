@@ -698,9 +698,17 @@ kbd {
     border: 1px solid var(--border-color);
 }
 
-.theme-preset span:last-child {
+.theme-label {
     font-size: 0.75rem;
-    color: var(--text-color);
+    color: var(--text-color) !important;
+    background: none !important;
+    display: block;
+}
+
+/* Ensure label text always uses current theme color */
+.theme-preset .theme-label,
+.theme-preset:hover .theme-label {
+    color: var(--text-color) !important;
 }
 
 /* Color Settings */
@@ -785,12 +793,19 @@ input[type="text"].color-text {
     font-size: 1rem;
     margin-bottom: 0.5rem;
     line-height: 1.4;
+    color: var(--text-color);
 }
 
 .font-name {
     font-size: 0.75rem;
     opacity: 0.8;
     font-family: system-ui, -apple-system, sans-serif;
+    color: var(--text-color);
+}
+
+.font-option.active .font-preview,
+.font-option.active .font-name {
+    color: white;
 }
 
 .font-option.active .font-name {
