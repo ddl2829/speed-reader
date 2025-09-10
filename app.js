@@ -674,30 +674,113 @@ class SpeedReader {
     }
 
     async loadLibrary() {
-        this.bookList.innerHTML = '<div class="loading">Loading books from Project Gutenberg...</div>';
+        this.bookList.innerHTML = '<div class="loading">Loading popular titles...</div>';
         
-        try {
-            // Use Gutendex API (a free API for Project Gutenberg)
-            const response = await fetch('https://gutendex.com/books/?mime_type=text%2Fplain&languages=en&copyright=false&page=1');
-            const data = await response.json();
-            
-            // Transform the data to our format
-            this.books = data.results.map(book => ({
-                id: book.id,
-                title: book.title,
-                author: book.authors.length > 0 ? book.authors[0].name : 'Unknown',
-                subjects: book.subjects,
-                formats: book.formats,
-                category: this.categorizeBook(book.subjects || [])
-            }));
-            
-            this.allBooks = this.books; // Store all books for filtering
-            this.displayBooks(this.books);
-        } catch (error) {
-            console.error('Error loading library:', error);
-            // Fallback to curated popular books if API fails
-            this.loadFallbackBooks();
-        }
+        // Load hardcoded popular titles for fast initial display
+        this.books = this.getPopularBooks();
+        this.allBooks = this.books;
+        this.displayBooks(this.books);
+    }
+
+    getPopularBooks() {
+        return [
+            {
+                id: 2701,
+                title: "Moby Dick; Or, The Whale",
+                author: "Herman Melville",
+                category: "fiction",
+                subjects: ["Fiction", "Adventure stories", "Whales -- Fiction"],
+                formats: { "text/plain": `https://www.gutenberg.org/files/2701/2701-0.txt` }
+            },
+            {
+                id: 84,
+                title: "Frankenstein; Or, The Modern Prometheus",
+                author: "Mary Wollstonecraft Shelley",
+                category: "fiction",
+                subjects: ["Fiction", "Gothic fiction", "Science fiction"],
+                formats: { "text/plain": `https://www.gutenberg.org/files/84/84-0.txt` }
+            },
+            {
+                id: 1513,
+                title: "Romeo and Juliet",
+                author: "William Shakespeare",
+                category: "fiction",
+                subjects: ["Fiction", "Tragedies", "Drama"],
+                formats: { "text/plain": `https://www.gutenberg.org/files/1513/1513-0.txt` }
+            },
+            {
+                id: 1342,
+                title: "Pride and Prejudice",
+                author: "Jane Austen",
+                category: "fiction",
+                subjects: ["Fiction", "Romance", "England -- Fiction"],
+                formats: { "text/plain": `https://www.gutenberg.org/files/1342/1342-0.txt` }
+            },
+            {
+                id: 2641,
+                title: "A Room with a View",
+                author: "E. M. Forster",
+                category: "fiction",
+                subjects: ["Fiction", "British -- Italy -- Fiction"],
+                formats: { "text/plain": `https://www.gutenberg.org/files/2641/2641-0.txt` }
+            },
+            {
+                id: 100,
+                title: "The Complete Works of William Shakespeare",
+                author: "William Shakespeare",
+                category: "fiction",
+                subjects: ["Fiction", "Drama", "Poetry"],
+                formats: { "text/plain": `https://www.gutenberg.org/files/100/100-0.txt` }
+            },
+            {
+                id: 145,
+                title: "Middlemarch",
+                author: "George Eliot",
+                category: "fiction",
+                subjects: ["Fiction", "England -- Fiction", "Bildungsromans"],
+                formats: { "text/plain": `https://www.gutenberg.org/files/145/145-0.txt` }
+            },
+            {
+                id: 11,
+                title: "Alice's Adventures in Wonderland",
+                author: "Lewis Carroll",
+                category: "fiction",
+                subjects: ["Fiction", "Fantasy fiction", "Children's stories"],
+                formats: { "text/plain": `https://www.gutenberg.org/files/11/11-0.txt` }
+            },
+            {
+                id: 37106,
+                title: "Little Women; Or, Meg, Jo, Beth, and Amy",
+                author: "Louisa May Alcott",
+                category: "fiction",
+                subjects: ["Fiction", "Family -- Fiction", "Sisters -- Fiction"],
+                formats: { "text/plain": `https://www.gutenberg.org/files/37106/37106-0.txt` }
+            },
+            {
+                id: 1661,
+                title: "The Adventures of Sherlock Holmes",
+                author: "Arthur Conan Doyle",
+                category: "fiction",
+                subjects: ["Fiction", "Mystery fiction", "Detective stories"],
+                formats: { "text/plain": `https://www.gutenberg.org/files/1661/1661-0.txt` }
+            },
+            {
+                id: 74,
+                title: "The Adventures of Tom Sawyer",
+                author: "Mark Twain",
+                category: "fiction",
+                subjects: ["Fiction", "Adventure stories", "Boys -- Fiction"],
+                formats: { "text/plain": `https://www.gutenberg.org/files/74/74-0.txt` }
+            },
+            {
+                id: 1260,
+                title: "Jane Eyre: An Autobiography",
+                author: "Charlotte Brontë",
+                category: "fiction",
+                subjects: ["Fiction", "Gothic fiction", "Orphans -- Fiction"],
+                formats: { "text/plain": `https://www.gutenberg.org/files/1260/1260-0.txt` }
+            }
+        ];
     }
     
     categorizeBook(subjects) {
